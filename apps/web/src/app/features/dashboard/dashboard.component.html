@@ -1,34 +1,60 @@
 <div class="dashboard-page">
   <header class="page-header">
     <h1>Executive Dashboard</h1>
-    <p>Real-time overview of support operations</p>
+    <p>
+      Real-time overview of support operations
+      @if (live()) {
+        <span class="live-badge">Live</span>
+      }
+    </p>
   </header>
 
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <span class="kpi-label">Departments</span>
-      <span class="kpi-value">{{ stats().departments }}</span>
+  @if (stats(); as s) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">Open Conversations</span>
+        <span class="kpi-value">{{ s.openConversations }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Waiting</span>
+        <span class="kpi-value warning">{{ s.waitingConversations }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Resolved Today</span>
+        <span class="kpi-value success">{{ s.resolvedToday }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Messages Today</span>
+        <span class="kpi-value">{{ s.messagesToday }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Agents Online</span>
+        <span class="kpi-value success">{{ s.agentsOnline }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Total Agents</span>
+        <span class="kpi-value">{{ s.totalAgents }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Departments</span>
+        <span class="kpi-value">{{ s.departments }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Active Queues</span>
+        <span class="kpi-value">{{ s.queues }}</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <span class="kpi-label">Active Queues</span>
-      <span class="kpi-value">{{ stats().queues }}</span>
+  } @else {
+    <div class="info-card">
+      <p>Loading dashboard stats...</p>
     </div>
-    <div class="kpi-card">
-      <span class="kpi-label">Agents Online</span>
-      <span class="kpi-value success">{{ stats().agentsOnline }}</span>
-    </div>
-    <div class="kpi-card">
-      <span class="kpi-label">Total Agents</span>
-      <span class="kpi-value">{{ stats().totalAgents }}</span>
-    </div>
-  </div>
+  }
 
   <div class="info-card">
-    <h2>Phase 3 Complete</h2>
+    <h2>Phase 5 Complete</h2>
     <p>
-      Organization &amp; Queue Engine is live. Departments, skills, queues, business hours,
-      agent availability, and the priority engine are operational. Conversation data and
-      charts arrive in Phases 4 and 9.
+      Real-time updates are active via Socket.IO. Conversation events, agent status changes,
+      and dashboard KPIs refresh automatically as activity occurs.
     </p>
   </div>
 </div>

@@ -95,9 +95,6 @@ services:
       CORS_ORIGIN: http://localhost:4200
     ports:
       - '3000:3000'
-    volumes:
-      - ./apps/api:/app/apps/api
-      - /app/node_modules
 
   web:
     build:
@@ -108,10 +105,11 @@ services:
     depends_on:
       - api
     environment:
-      API_URL: http://localhost:3000/api
-      WS_URL: http://localhost:3000
+      API_URL: http://api:3000/api
+      WS_URL: http://api:3000
     ports:
       - '4200:4200'
+    command: ["npx", "nx", "serve", "web", "--host", "0.0.0.0", "--port", "4200", "--configuration=docker"]
     volumes:
       - ./apps/web:/app/apps/web
       - /app/node_modules

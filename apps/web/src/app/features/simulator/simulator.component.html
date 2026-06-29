@@ -1,0 +1,130 @@
+<div class="simulator-page">
+  <header class="page-header">
+    <h1>WhatsApp Simulator</h1>
+    <p>Simulate customer messages without Meta APIs. Changes sync with the agent inbox in real time.</p>
+  </header>
+
+  <div class="simulator-layout">
+    <aside class="customer-panel">
+      <div class="panel-search">
+        <input
+          type="search"
+          placeholder="Search customers..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          (keyup.enter)="loadCustomers()"
+        />
+        <button type="button" (click)="loadCustomers()">Search</button>
+      </div>
+
+      @if (loading()) {
+        <p class="panel-hint">Loading customers...</p>
+      } @else {
+        <ul class="customer-list">
+          @for (customer of customers(); track customer.id) {
+            <li>
+              <button
+                type="button"
+                class="customer-item"
+                [class.active]="customer.id === selectedCustomerId()"
+                (click)="selectCustomer(customer.id)"
+              >
+                <span class="avatar">{{ (customer.name || customer.phone).charAt(0) }}</span>
+                <span class="meta">
+                  <span class="name">{{ customer.name || customer.phone }}</span>
+                  <span class="phone">{{ customer.phone }}</span>
+                </span>
+                @if (customer.unreadCount > 0) {
+                  <span class="badge">{{ customer.unreadCount }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <div class="phone-wrap">
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+
+        <div class="wa-header">
+          <div class="wa-contact">
+            <span class="avatar">{{ (selectedCustomer()?.name || selectedCustomer()?.phone || '?').charAt(0) }}</span>
+            <div>
+              <div class="wa-name">{{ selectedCustomer()?.name || 'Select customer' }}</div>
+              <div class="wa-status">
+                @if (customerState()?.isOnline) {
+                  online
+                } @else {
+                  offline
+                }
+              </div>
+            </div>
+          </div>
+          <div class="wa-actions">
+            <span
+              class="window-badge"
+              [class.open]="customerState()?.windowOpen"
+              [class.closed]="!customerState()?.windowOpen"
+            >
+              {{ windowLabel() }}
+            </span>
+            <button type="button" class="icon-btn" (click)="toggleOnline()" title="Toggle online">
+              <span class="material-icons">power_settings_new</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="wa-chat" #chatBody>
+          @for (msg of messages(); track msg.id) {
+            <div class="bubble-row" [class.outbound]="isOutbound(msg)">
+              <div class="bubble">
+                @if (msg.contentType === 'IMAGE' && msg.attachments[0]) {
+                  <img [src]="msg.attachments[0].url" [alt]="msg.attachments[0].fileName" class="media-preview" />
+                } @else if (msg.contentType !== 'TEXT' && msg.attachments[0]) {
+                  <div class="file-attachment">
+                    <span class="material-icons">attach_file</span>
+                    {{ msg.attachments[0].fileName }}
+                  </div>
+                }
+                @if (msg.content) {
+                  <p>{{ msg.content }}</p>
+                }
+                <div class="bubble-meta">
+                  <span>{{ msg.createdAt | date: 'shortTime' }}</span>
+                  @if (statusIcon(msg)) {
+                    <span class="material-icons tick">{{ statusIcon(msg) }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+          @if (agentTyping()) {
+            <div class="bubble-row outbound">
+              <div class="bubble typing">Agent is typing...</div>
+            </div>
+          }
+        </div>
+
+        <div class="wa-input">
+          <label class="attach-btn" title="Attach file">
+            <span class="material-icons">attach_file</span>
+            <input type="file" hidden (change)="onFileSelected($event)" accept="image/*,audio/*,.pdf,.doc,.docx" />
+          </label>
+          <input
+            type="text"
+            placeholder="Type a message"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            (input)="onDraftInput()"
+            (keyup.enter)="send()"
+          />
+          <button type="button" class="send-btn" [disabled]="sending() || !draft().trim()" (click)="send()">
+            <span class="material-icons">send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterModule, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { SocketService } from '../services/socket.service';
 import { getInitials } from '@helix/utils';
 import { APP_NAME } from '@helix/shared';
 
@@ -16,8 +17,9 @@ interface NavItem {
   templateUrl: './app-layout.component.html',
   styleUrl: './app-layout.component.scss',
 })
-export class AppLayoutComponent implements OnInit {
+export class AppLayoutComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private readonly socketService = inject(SocketService);
 
   protected readonly appName = APP_NAME;
   protected readonly user = this.authService.user;
@@ -25,11 +27,16 @@ export class AppLayoutComponent implements OnInit {
 
   protected readonly navItems: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
+    { label: 'Simulator', route: '/simulator', icon: 'phone_iphone' },
     { label: 'Administration', route: '/admin', icon: 'settings' },
   ];
 
   ngOnInit(): void {
-    // Layout ready
+    this.socketService.connect();
+  }
+
+  ngOnDestroy(): void {
+    this.socketService.disconnect();
   }
 
   protected getInitials(): string {
@@ -39,6 +46,7 @@ export class AppLayoutComponent implements OnInit {
   }
 
   protected logout(): void {
+    this.socketService.disconnect();
     this.authService.logout();
   }
 

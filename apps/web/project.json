@@ -57,6 +57,10 @@
         "development": {
           "buildTarget": "web:build:development",
           "proxyConfig": "apps/web/proxy.conf.json"
+        },
+        "docker": {
+          "buildTarget": "web:build:development",
+          "proxyConfig": "apps/web/proxy.conf.docker.json"
         }
       }
     },

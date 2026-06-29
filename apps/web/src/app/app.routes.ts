@@ -25,6 +25,11 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./features/admin/admin.component').then((m) => m.AdminComponent),
       },
+      {
+        path: 'simulator',
+        loadComponent: () =>
+          import('./features/simulator/simulator.component').then((m) => m.SimulatorComponent),
+      },
     ],
   },
 ];

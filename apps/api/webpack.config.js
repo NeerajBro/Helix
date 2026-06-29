@@ -5,6 +5,8 @@ module.exports = {
   externals: {
     '@prisma/client': 'commonjs @prisma/client',
     '.prisma/client': 'commonjs .prisma/client',
+    minio: 'commonjs minio',
+    'socket.io': 'commonjs socket.io',
   },
   output: {
     path: join(__dirname, '../../dist/apps/api'),

@@ -51,6 +51,24 @@
   &.success {
     color: #2e7d32;
   }
+
+  &.warning {
+    color: #ef6c00;
+  }
+}
+
+.live-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  vertical-align: middle;
 }
 
 .info-card {

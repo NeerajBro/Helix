@@ -4,7 +4,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-COPY nx.json tsconfig.base.json ./
+COPY nx.json tsconfig.base.json eslint.config.mjs .nxignore ./
 COPY apps/api ./apps/api
 COPY packages ./packages
 

@@ -12,6 +12,13 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { SkillsModule } from './modules/skills/skills.module';
 import { QueuesModule } from './modules/queues/queues.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
+import { CustomersModule } from './modules/customers/customers.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SimulatorModule } from './modules/simulator/simulator.module';
+import { StorageModule } from './infrastructure/storage/storage.module';
+import { SocketModule } from './infrastructure/socket/socket.module';
+import { WhatsAppAdapterModule } from './adapters/whatsapp/whatsapp.module';
 import { JwtAuthGuard } from './core/guards/jwt-auth.guard';
 import { PermissionsGuard } from './core/guards/permissions.guard';
 import {
@@ -30,6 +37,9 @@ import {
       envFilePath: ['.env', '../../.env'],
     }),
     PrismaModule,
+    StorageModule,
+    SocketModule,
+    WhatsAppAdapterModule,
     AuthModule,
     UsersModule,
     RolesModule,
@@ -37,6 +47,10 @@ import {
     SkillsModule,
     QueuesModule,
     AvailabilityModule,
+    CustomersModule,
+    ConversationsModule,
+    DashboardModule,
+    SimulatorModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

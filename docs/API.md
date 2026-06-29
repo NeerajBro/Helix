@@ -111,44 +111,86 @@ Authorization: Bearer <access_token>
 | POST | `/availability/me/break/start` | Authenticated | Start break |
 | POST | `/availability/me/break/end` | Authenticated | End break |
 
+## Customers (Phase 4)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/customers` | `conversations:read` | List customers (paginated) |
+| GET | `/customers/:id` | `conversations:read` | Get customer detail |
+| GET | `/customers/:id/timeline` | `conversations:read` | Customer activity timeline |
+| POST | `/customers` | `conversations:create` | Create customer |
+| PATCH | `/customers/:id` | `conversations:update` | Update customer |
+| DELETE | `/customers/:id` | `conversations:delete` | Soft delete customer |
+
 ## Conversations (Phase 4)
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
 | GET | `/conversations` | `conversations:read` | List conversations |
 | GET | `/conversations/:id` | `conversations:read` | Get conversation detail |
+| POST | `/conversations` | `conversations:create` | Create conversation |
+| PATCH | `/conversations/:id` | `conversations:update` | Update conversation |
 | PATCH | `/conversations/:id/assign` | `conversations:assign` | Assign to agent |
 | PATCH | `/conversations/:id/transfer` | `conversations:transfer` | Transfer department |
-| PATCH | `/conversations/:id/resolve` | `conversations:resolve` | Resolve conversation |
-| PATCH | `/conversations/:id/close` | `conversations:close` | Close conversation |
+| PATCH | `/conversations/:id/resolve` | `conversations:update` | Resolve conversation |
+| PATCH | `/conversations/:id/close` | `conversations:update` | Close conversation |
+| PATCH | `/conversations/:id/lock` | `conversations:update` | Lock conversation |
+| PATCH | `/conversations/:id/unlock` | `conversations:update` | Unlock conversation |
+| GET | `/conversations/tags` | `conversations:read` | List tags |
+| POST | `/conversations/tags` | `conversations:update` | Create tag |
+| POST | `/conversations/:id/tags` | `conversations:update` | Add tag to conversation |
+| DELETE | `/conversations/:id/tags/:tagId` | `conversations:update` | Remove tag |
+| GET | `/conversations/:id/notes` | `conversations:read` | List internal notes |
+| POST | `/conversations/:id/notes` | `conversations:update` | Add internal note |
 
 ## Messages (Phase 4)
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
 | GET | `/conversations/:id/messages` | `messages:read` | List messages |
-| POST | `/conversations/:id/messages` | `messages:create` | Send message |
+| POST | `/conversations/:id/messages` | `messages:create` | Send message (JSON or multipart with `file`) |
 
-## Dashboard (Phase 9)
+## Simulator (Phase 6)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/simulator/customers` | `conversations:read` | List customers for simulator |
+| GET | `/simulator/customers/:id` | `conversations:read` | Customer + active conversation state |
+| GET | `/simulator/customers/:id/messages` | `messages:read` | Messages in active conversation |
+| POST | `/simulator/customers/:id/messages` | `messages:create` | Send as customer (JSON or multipart) |
+| PATCH | `/simulator/customers/:id/presence` | `conversations:update` | Toggle online/offline |
+| POST | `/simulator/customers/:id/read` | `messages:read` | Mark agent messages as read |
+
+## Dashboard (Phase 5)
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
 | GET | `/dashboard/stats` | `reports:read` | Real-time KPI stats |
-| GET | `/dashboard/trends` | `reports:read` | Conversation trends |
-| GET | `/dashboard/agents` | `reports:read` | Agent performance |
 
-## WebSocket Events
+## WebSocket Events (Phase 5)
 
-Connect to `ws://localhost:3000` with JWT token.
-
-See `packages/shared/src/lib/socket-events.ts` for the full event catalog.
+Connect to the app origin (proxied to the API) with JWT token in `auth.token`.
 
 | Event | Direction | Payload |
 |-------|-----------|---------|
 | `message:received` | Server → Client | `{ conversationId, message }` |
-| `conversation:assigned` | Server → Client | `{ conversationId, agentId }` |
+| `conversation:assigned` | Server → Client | `{ conversationId, agentId, conversation }` |
+| `conversation:updated` | Server → Client | `{ conversation }` |
 | `typing:start` | Bidirectional | `{ conversationId, userId }` |
-| `dashboard:stats_updated` | Server → Client | `{ stats }` |
+| `typing:stop` | Bidirectional | `{ conversationId, userId }` |
+| `agent:status_changed` | Server → Client | `{ userId, status, since }` |
+| `dashboard:stats_updated` | Server → Client | Dashboard KPI object |
+| `subscribe:simulator` | Client → Server | `{ customerId }` |
+| `unsubscribe:simulator` | Client → Server | `{ customerId }` |
+| `simulator:message` | Server → Client | Inbound/outbound message sync |
+| `simulator:status` | Server → Client | Online status, 24h window updates |
+
+Client commands:
+
+| Event | Payload |
+|-------|---------|
+| `subscribe:conversation` | `{ conversationId }` |
+| `unsubscribe:conversation` | `{ conversationId }` |
 
 ## Pagination
 

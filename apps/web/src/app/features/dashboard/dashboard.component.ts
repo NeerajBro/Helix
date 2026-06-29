@@ -1,35 +1,36 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { OrganizationService } from '../../core/services/organization.service';
+import { Component, inject, signal, OnInit, OnDestroy, effect } from '@angular/core';
+import { DashboardService } from '../../core/services/dashboard.service';
+import { SocketService } from '../../core/services/socket.service';
+import { DashboardStats } from '@helix/types';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent implements OnInit {
-  private readonly orgService = inject(OrganizationService);
+export class DashboardComponent implements OnInit, OnDestroy {
+  private readonly dashboardService = inject(DashboardService);
+  private readonly socketService = inject(SocketService);
 
-  protected readonly stats = signal({
-    departments: 0,
-    queues: 0,
-    agentsOnline: 0,
-    totalAgents: 0,
-  });
+  protected readonly stats = signal<DashboardStats | null>(null);
+  protected readonly live = this.socketService.connected;
+
+  constructor() {
+    effect(() => {
+      const liveStats = this.socketService.dashboardStats();
+      if (liveStats) {
+        this.stats.set(liveStats);
+      }
+    });
+  }
 
   ngOnInit(): void {
-    this.orgService.getDepartments().subscribe({
-      next: (d) => this.stats.update((s) => ({ ...s, departments: d.length })),
+    this.dashboardService.getStats().subscribe({
+      next: (res) => this.stats.set(res.data),
     });
-    this.orgService.getQueues().subscribe({
-      next: (q) => this.stats.update((s) => ({ ...s, queues: q.length })),
-    });
-    this.orgService.getAvailabilitySummary().subscribe({
-      next: (summary) =>
-        this.stats.update((s) => ({
-          ...s,
-          agentsOnline: summary.byStatus['ONLINE'] ?? 0,
-          totalAgents: summary.total,
-        })),
-    });
+  }
+
+  ngOnDestroy(): void {
+    // Socket lifecycle is managed by the app layout.
   }
 }

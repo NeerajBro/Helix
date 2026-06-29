@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AgentAvailabilityStatus } from '@prisma/client';
+import { SOCKET_EVENTS } from '@helix/shared';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RealtimeService } from '../../infrastructure/socket/realtime.service';
 import { UpdateAvailabilityDto } from './dto/availability.dto';
 
 @Injectable()
 export class AvailabilityService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtime: RealtimeService,
+  ) {}
 
   async findAll(departmentId?: string) {
     const users = await this.prisma.user.findMany({
@@ -69,6 +74,25 @@ export class AvailabilityService {
         reason: dto.reason,
       },
     });
+
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
+      select: { departmentId: true, firstName: true, lastName: true },
+    });
+
+    const payload = {
+      userId,
+      userName: user ? `${user.firstName} ${user.lastName}` : userId,
+      status: availability.status,
+      reason: availability.reason ?? undefined,
+      since: availability.since.toISOString(),
+    };
+
+    this.realtime.emitToAgent(userId, SOCKET_EVENTS.AGENT_STATUS_CHANGED, payload);
+    if (user?.departmentId) {
+      this.realtime.emitToDepartment(user.departmentId, SOCKET_EVENTS.AGENT_STATUS_CHANGED, payload);
+    }
+    void this.realtime.refreshDashboardStats();
 
     return {
       status: availability.status,
