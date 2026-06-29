@@ -19,6 +19,9 @@ import { SimulatorModule } from './modules/simulator/simulator.module';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { SocketModule } from './infrastructure/socket/socket.module';
 import { WhatsAppAdapterModule } from './adapters/whatsapp/whatsapp.module';
+import { BotAdapterModule } from './adapters/bot/bot.module';
+import { AiAdapterModule } from './adapters/ai/ai.module';
+import { BotModule } from './modules/bot/bot.module';
 import { JwtAuthGuard } from './core/guards/jwt-auth.guard';
 import { PermissionsGuard } from './core/guards/permissions.guard';
 import {
@@ -40,6 +43,8 @@ import {
     StorageModule,
     SocketModule,
     WhatsAppAdapterModule,
+    BotAdapterModule,
+    AiAdapterModule,
     AuthModule,
     UsersModule,
     RolesModule,
@@ -51,6 +56,7 @@ import {
     ConversationsModule,
     DashboardModule,
     SimulatorModule,
+    BotModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

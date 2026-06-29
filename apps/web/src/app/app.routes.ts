@@ -26,6 +26,11 @@ export const appRoutes: Route[] = [
           import('./features/admin/admin.component').then((m) => m.AdminComponent),
       },
       {
+        path: 'inbox',
+        loadComponent: () =>
+          import('./features/inbox/inbox.component').then((m) => m.InboxComponent),
+      },
+      {
         path: 'simulator',
         loadComponent: () =>
           import('./features/simulator/simulator.component').then((m) => m.SimulatorComponent),

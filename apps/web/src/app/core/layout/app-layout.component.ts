@@ -27,6 +27,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
 
   protected readonly navItems: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
+    { label: 'Inbox', route: '/inbox', icon: 'inbox' },
     { label: 'Simulator', route: '/simulator', icon: 'phone_iphone' },
     { label: 'Administration', route: '/admin', icon: 'settings' },
   ];

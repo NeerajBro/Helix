@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_EVENTS } from '@helix/shared';
-import { DashboardStats, MessageDto } from '@helix/types';
+import { DashboardStats, MessageDto, ConversationDetail } from '@helix/types';
 import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
 
@@ -78,8 +78,26 @@ export class SocketService implements OnDestroy {
     return this.listen(SOCKET_EVENTS.MESSAGE_RECEIVED);
   }
 
-  onConversationUpdated(): Observable<{ conversation: unknown }> {
+  onConversationUpdated(): Observable<
+    { conversation: ConversationDetail } | { conversationId: string; aiSummary: string }
+  > {
     return this.listen(SOCKET_EVENTS.CONVERSATION_UPDATED);
+  }
+
+  onConversationAssigned(): Observable<{ conversationId: string; conversation: ConversationDetail }> {
+    return this.listen(SOCKET_EVENTS.CONVERSATION_ASSIGNED);
+  }
+
+  onConversationTransferred(): Observable<{ conversationId: string; conversation: ConversationDetail }> {
+    return this.listen(SOCKET_EVENTS.CONVERSATION_TRANSFERRED);
+  }
+
+  onConversationResolved(): Observable<{ conversationId: string; conversation: ConversationDetail }> {
+    return this.listen(SOCKET_EVENTS.CONVERSATION_RESOLVED);
+  }
+
+  onConversationClosed(): Observable<{ conversationId: string; conversation: ConversationDetail }> {
+    return this.listen(SOCKET_EVENTS.CONVERSATION_CLOSED);
   }
 
   onTypingStart(): Observable<TypingEvent> {

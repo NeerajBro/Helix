@@ -35,6 +35,7 @@ export class SimulatorComponent implements OnInit, OnDestroy {
   protected readonly loading = signal(true);
   protected readonly sending = signal(false);
   protected readonly agentTyping = signal(false);
+  protected readonly typingLabel = signal('Agent is typing...');
   protected readonly search = signal('');
 
   protected readonly selectedCustomer = computed(() => {
@@ -91,6 +92,7 @@ export class SimulatorComponent implements OnInit, OnDestroy {
         const convId = this.customerState()?.activeConversationId;
         if (convId && e.conversationId === convId) {
           this.agentTyping.set(true);
+          this.typingLabel.set(e.userId === 'bot' ? 'HELIX Bot is typing...' : 'Agent is typing...');
         }
       }),
       this.socketService.onTypingStop().subscribe((e) => {

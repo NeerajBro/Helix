@@ -1,0 +1,265 @@
+<div class="inbox-page">
+  <header class="inbox-header">
+    <div>
+      <h1>Inbox</h1>
+      <p>Manage customer conversations in real time</p>
+    </div>
+    <div class="header-actions">
+      <label class="mine-toggle">
+        <input type="checkbox" [ngModel]="mineOnly()" (ngModelChange)="mineOnly.set($event); loadConversations()" />
+        My conversations
+      </label>
+    </div>
+  </header>
+
+  <div class="inbox-layout">
+    <!-- Conversation list -->
+    <aside class="list-pane">
+      <div class="list-toolbar">
+        <input
+          type="search"
+          placeholder="Search name or phone..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          (keyup.enter)="loadConversations()"
+        />
+        <div class="status-tabs">
+          @for (f of statusFilters; track f.value) {
+            <button
+              type="button"
+              class="tab"
+              [class.active]="statusFilter() === f.value"
+              (click)="statusFilter.set(f.value); loadConversations()"
+            >
+              {{ f.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (loadingList()) {
+        <p class="pane-hint">Loading conversations...</p>
+      } @else if (!conversations().length) {
+        <p class="pane-hint">No conversations found</p>
+      } @else {
+        <ul class="conv-list">
+          @for (c of conversations(); track c.id) {
+            <li>
+              <button
+                type="button"
+                class="conv-item"
+                [class.active]="c.id === selectedId()"
+                (click)="selectConversation(c.id)"
+              >
+                <div class="conv-top">
+                  <span class="conv-name">{{ c.customerName || c.customerPhone }}</span>
+                  <span class="conv-time">{{ c.lastMessageAt || c.updatedAt | date: 'shortTime' }}</span>
+                </div>
+                <div class="conv-preview">{{ c.lastMessage || c.subject || 'No messages' }}</div>
+                <div class="conv-meta">
+                  <span class="badge status" [class]="statusClass(c.status)">{{ c.status }}</span>
+                  @if (c.priority !== 'NORMAL') {
+                    <span class="badge priority" [class]="priorityClass(c.priority)">{{ c.priority }}</span>
+                  }
+                  @if (c.botHandled) {
+                    <span class="badge bot">Bot</span>
+                  }
+                  @if (c.slaBreached) {
+                    <span class="badge sla">SLA</span>
+                  }
+                </div>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <!-- Message thread -->
+    <section class="thread-pane">
+      @if (!selectedId()) {
+        <div class="empty-thread">
+          <span class="material-icons">inbox</span>
+          <p>Select a conversation to start</p>
+        </div>
+      } @else if (loadingThread()) {
+        <div class="empty-thread"><p>Loading...</p></div>
+      } @else {
+        <div class="thread-header">
+          <div>
+            <h2>{{ detail()?.customer?.name || detail()?.customerPhone }}</h2>
+            <span class="sub">{{ detail()?.customer?.phone }} · {{ detail()?.departmentName || 'Unassigned' }}</span>
+          </div>
+          <div class="thread-actions">
+            @if (detail()?.status !== 'RESOLVED' && detail()?.status !== 'CLOSED') {
+              <button type="button" class="btn secondary" (click)="openTransfer()">Transfer</button>
+              <button type="button" class="btn success" (click)="resolve()">Resolve</button>
+              <button type="button" class="btn warn" (click)="closeConversation()">Close</button>
+            }
+          </div>
+        </div>
+
+        <div class="thread-body" #threadBody>
+          @for (msg of messages(); track msg.id) {
+            <div class="msg-row" [class.inbound]="isInbound(msg)" [class.outbound]="!isInbound(msg)">
+              <div class="msg-bubble" [class.bot]="msg.senderType === 'BOT'">
+                <span class="msg-sender">{{ senderLabel(msg) }}</span>
+                @if (msg.contentType === 'IMAGE' && msg.attachments?.[0]; as att) {
+                  <img [src]="att.url" [alt]="att.fileName" class="msg-media" />
+                } @else if (msg.attachments?.[0]; as att) {
+                  <a class="msg-file" [href]="att.url" target="_blank" rel="noopener">
+                    <span class="material-icons">attach_file</span>
+                    {{ att.fileName }}
+                  </a>
+                }
+                @if (msg.content) {
+                  <p class="msg-text">{{ msg.content }}</p>
+                }
+                <div class="msg-meta">
+                  <span>{{ msg.createdAt | date: 'shortTime' }}</span>
+                  @if (!isInbound(msg) && msg.status) {
+                    <span class="tick">{{ msg.readAt ? '✓✓' : msg.deliveredAt ? '✓✓' : msg.sentAt ? '✓' : '○' }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+          @if (customerTyping()) {
+            <div class="msg-row inbound">
+              <div class="msg-bubble typing">{{ typingLabel() }}</div>
+            </div>
+          }
+        </div>
+
+        @if (detail()?.status !== 'CLOSED') {
+          <div class="reply-box">
+            <label class="attach-btn" title="Attach file">
+              <span class="material-icons">attach_file</span>
+              <input type="file" hidden (change)="onFileSelected($event)" accept="image/*,audio/*,.pdf,.doc,.docx" />
+            </label>
+            <textarea
+              rows="2"
+              placeholder="Type your reply..."
+              [ngModel]="draft()"
+              (ngModelChange)="draft.set($event)"
+              (input)="onDraftInput()"
+              (keydown.enter)="$event.preventDefault(); sendReply()"
+            ></textarea>
+            <button type="button" class="btn primary" [disabled]="sending() || !draft().trim()" (click)="sendReply()">
+              Send
+            </button>
+          </div>
+        }
+      }
+    </section>
+
+    <!-- Customer profile -->
+    <aside class="profile-pane">
+      @if (detail(); as d) {
+        <section class="profile-section">
+          <h3>Customer</h3>
+          <div class="profile-card">
+            <div class="profile-name">
+              {{ d.customer.name || 'Unknown' }}
+              @if (d.customer.isVip) {
+                <span class="vip-badge">VIP</span>
+              }
+            </div>
+            <div class="profile-field"><span>Phone</span>{{ d.customer.phone }}</div>
+            @if (d.customer.email) {
+              <div class="profile-field"><span>Email</span>{{ d.customer.email }}</div>
+            }
+            <div class="profile-field"><span>Language</span>{{ d.customer.language }}</div>
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <div class="section-head">
+            <h3>AI Summary</h3>
+            <button type="button" class="link-btn" (click)="refreshSummary()">Regenerate</button>
+          </div>
+          <div class="summary-box">{{ formatSummary(d.aiSummary) }}</div>
+        </section>
+
+        <section class="profile-section">
+          <h3>Conversation</h3>
+          <div class="profile-field"><span>Status</span>{{ d.status }}</div>
+          <div class="profile-field"><span>Priority</span>{{ d.priority }}</div>
+          <div class="profile-field"><span>Queue</span>{{ d.queueName || '—' }}</div>
+          <div class="profile-field"><span>Agent</span>{{ d.assignedAgent?.name || 'Unassigned' }}</div>
+          @if (d.botHandled) {
+            <div class="profile-field"><span>Bot</span>Active</div>
+          }
+          @if (d.tags.length) {
+            <div class="tags">
+              @for (tag of d.tags; track tag.id) {
+                <span class="tag" [style.background]="tag.color">{{ tag.name }}</span>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="profile-section">
+          <h3>Internal Notes</h3>
+          <div class="note-form">
+            <textarea
+              rows="2"
+              placeholder="Add a private note..."
+              [ngModel]="noteDraft()"
+              (ngModelChange)="noteDraft.set($event)"
+            ></textarea>
+            <button type="button" class="btn secondary" [disabled]="!noteDraft().trim()" (click)="addNote()">
+              Add note
+            </button>
+          </div>
+          @for (note of d.internalNotes; track note.id) {
+            <div class="note-item">
+              <div class="note-meta">{{ note.author.name }} · {{ note.createdAt | date: 'short' }}</div>
+              <p>{{ note.content }}</p>
+            </div>
+          } @empty {
+            <p class="pane-hint">No internal notes yet</p>
+          }
+        </section>
+      } @else {
+        <p class="pane-hint">Select a conversation</p>
+      }
+    </aside>
+  </div>
+
+  @if (showTransfer()) {
+    <div class="modal-backdrop" (click)="showTransfer.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Transfer conversation</h3>
+        <label>
+          Department
+          <select [ngModel]="transferDeptId()" (ngModelChange)="onTransferDeptChange($event)">
+            <option value="">Select department</option>
+            @for (dept of departments(); track dept.id) {
+              <option [value]="dept.id">{{ dept.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Queue
+          <select [ngModel]="transferQueueId()" (ngModelChange)="transferQueueId.set($event)">
+            <option value="">Auto-select</option>
+            @for (q of queues(); track q.id) {
+              <option [value]="q.id">{{ q.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Reason
+          <input type="text" [ngModel]="transferReason()" (ngModelChange)="transferReason.set($event)" />
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn secondary" (click)="showTransfer.set(false)">Cancel</button>
+          <button type="button" class="btn primary" [disabled]="!transferDeptId()" (click)="confirmTransfer()">
+            Transfer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

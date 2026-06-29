@@ -34,6 +34,10 @@ export const SOCKET_EVENTS = {
   // Simulator
   SIMULATOR_MESSAGE: 'simulator:message',
   SIMULATOR_STATUS: 'simulator:status',
+
+  // Bot
+  BOT_HANDOFF: 'bot:handoff',
+  BOT_MESSAGE: 'bot:message',
 } as const;
 
 export type SocketEvent = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];

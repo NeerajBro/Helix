@@ -12,7 +12,7 @@
   @if (stats(); as s) {
     <div class="kpi-grid">
       <div class="kpi-card">
-        <span class="kpi-label">Open Conversations</span>
+        <span class="kpi-label">Open</span>
         <span class="kpi-value">{{ s.openConversations }}</span>
       </div>
       <div class="kpi-card">
@@ -20,8 +20,24 @@
         <span class="kpi-value warning">{{ s.waitingConversations }}</span>
       </div>
       <div class="kpi-card">
+        <span class="kpi-label">Pending</span>
+        <span class="kpi-value">{{ s.pendingConversations }}</span>
+      </div>
+      <div class="kpi-card">
         <span class="kpi-label">Resolved Today</span>
         <span class="kpi-value success">{{ s.resolvedToday }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Closed Today</span>
+        <span class="kpi-value">{{ s.closedToday }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">SLA Breached</span>
+        <span class="kpi-value" [class.danger]="s.slaBreached > 0">{{ s.slaBreached }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Avg First Response</span>
+        <span class="kpi-value">{{ s.avgFirstResponseMinutes }}m</span>
       </div>
       <div class="kpi-card">
         <span class="kpi-label">Messages Today</span>
@@ -29,11 +45,7 @@
       </div>
       <div class="kpi-card">
         <span class="kpi-label">Agents Online</span>
-        <span class="kpi-value success">{{ s.agentsOnline }}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Total Agents</span>
-        <span class="kpi-value">{{ s.totalAgents }}</span>
+        <span class="kpi-value success">{{ s.agentsOnline }} / {{ s.totalAgents }}</span>
       </div>
       <div class="kpi-card">
         <span class="kpi-label">Departments</span>
@@ -45,16 +57,105 @@
       </div>
     </div>
   } @else {
-    <div class="info-card">
-      <p>Loading dashboard stats...</p>
-    </div>
+    <div class="info-card"><p>Loading dashboard stats...</p></div>
   }
 
-  <div class="info-card">
-    <h2>Phase 5 Complete</h2>
-    <p>
-      Real-time updates are active via Socket.IO. Conversation events, agent status changes,
-      and dashboard KPIs refresh automatically as activity occurs.
-    </p>
-  </div>
+  @if (loadingAnalytics()) {
+    <div class="info-card"><p>Loading analytics...</p></div>
+  } @else if (analytics(); as a) {
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Conversation Trends</h2>
+          <div class="day-toggle">
+            <button type="button" [class.active]="trendDays() === 7" (click)="setTrendDays(7)">7d</button>
+            <button type="button" [class.active]="trendDays() === 14" (click)="setTrendDays(14)">14d</button>
+            <button type="button" [class.active]="trendDays() === 30" (click)="setTrendDays(30)">30d</button>
+          </div>
+        </div>
+        <apx-chart
+          [series]="trendSeries()"
+          [chart]="trendChart().chart"
+          [xaxis]="trendChart().xaxis"
+          [yaxis]="trendChart().yaxis"
+          [stroke]="trendChart().stroke"
+          [colors]="trendChart().colors"
+          [dataLabels]="trendChart().dataLabels"
+          [legend]="trendChart().legend"
+        ></apx-chart>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Active by Department</h2>
+        </div>
+        @if (a.departmentDistribution.length) {
+          <apx-chart
+            [series]="deptSeries()"
+            [chart]="deptChart().chart"
+            [labels]="deptChart().labels"
+            [colors]="deptChart().colors"
+            [legend]="deptChart().legend"
+            [dataLabels]="deptChart().dataLabels"
+            [plotOptions]="deptChart().plotOptions"
+          ></apx-chart>
+        } @else {
+          <p class="chart-empty">No active conversations by department</p>
+        }
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card wide">
+        <div class="chart-header">
+          <h2>Agent Utilization</h2>
+        </div>
+        @if (a.agentPerformance.length) {
+          <apx-chart
+            [series]="agentSeries()"
+            [chart]="agentChart().chart"
+            [xaxis]="agentChart().xaxis"
+            [colors]="agentChart().colors"
+            [plotOptions]="agentChart().plotOptions"
+            [dataLabels]="agentChart().dataLabels"
+          ></apx-chart>
+        } @else {
+          <p class="chart-empty">No agent data available</p>
+        }
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Agent Performance</h2>
+        </div>
+        <div class="agent-table-wrap">
+          <table class="agent-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Status</th>
+                <th>Active</th>
+                <th>Resolved</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (agent of topAgents(); track agent.agentId) {
+                <tr>
+                  <td>
+                    <div class="agent-name">{{ agent.agentName }}</div>
+                    <div class="agent-dept">{{ agent.departmentName || '—' }}</div>
+                  </td>
+                  <td>
+                    <span class="status-pill" [class]="agentStatusClass(agent)">{{ agent.status }}</span>
+                  </td>
+                  <td>{{ agent.activeConversations }}/{{ agent.maxCapacity }}</td>
+                  <td>{{ agent.resolvedToday }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
 </div>

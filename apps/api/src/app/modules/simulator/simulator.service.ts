@@ -18,6 +18,7 @@ import { SOCKET_EVENTS, WHATSAPP_SESSION_WINDOW_HOURS } from '@helix/shared';
 import { SimulatorCustomerSummary, SimulatorConversationState } from '@helix/types';
 import { SimulatorCustomerQueryDto, SimulatorPresenceDto, SimulatorSendMessageDto } from './dto/simulator.dto';
 import { buildPaginatedResponse, parsePagination } from '@helix/utils';
+import { BotService } from '../bot/bot.service';
 
 const ACTIVE_STATUSES: ConversationStatus[] = ['OPEN', 'PENDING', 'WAITING', 'TRANSFERRED'];
 
@@ -28,6 +29,7 @@ export class SimulatorService {
     private readonly minio: MinioService,
     private readonly realtime: RealtimeService,
     @Inject(WHATSAPP_ADAPTER) private readonly whatsapp: WhatsAppAdapter,
+    private readonly botService: BotService,
   ) {}
 
   async listCustomers(query: SimulatorCustomerQueryDto) {
@@ -174,6 +176,10 @@ export class SimulatorService {
       contentType: contentType as never,
       content: mapped.content,
     });
+
+    if (conversation.botHandled) {
+      void this.botService.handleCustomerMessage(conversation.id, message.id).catch(() => undefined);
+    }
 
     return mapped;
   }

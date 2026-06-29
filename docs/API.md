@@ -161,11 +161,20 @@ Authorization: Bearer <access_token>
 | PATCH | `/simulator/customers/:id/presence` | `conversations:update` | Toggle online/offline |
 | POST | `/simulator/customers/:id/read` | `messages:read` | Mark agent messages as read |
 
-## Dashboard (Phase 5)
+## Bot (Phase 7)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/bot/intents` | `conversations:read` | List intent rules and queue mappings |
+| POST | `/bot/conversations/:id/handoff` | `conversations:transfer` | Trigger bot-to-human handoff |
+| POST | `/bot/conversations/:id/summary` | `conversations:update` | Regenerate AI conversation summary |
+
+## Dashboard (Phase 5 & 9)
 
 | Method | Path | Permission | Description |
 |--------|------|------------|-------------|
 | GET | `/dashboard/stats` | `reports:read` | Real-time KPI stats |
+| GET | `/dashboard/analytics` | `reports:read` | Trends, department distribution, agent performance (`?days=7`) |
 
 ## WebSocket Events (Phase 5)
 
@@ -184,6 +193,7 @@ Connect to the app origin (proxied to the API) with JWT token in `auth.token`.
 | `unsubscribe:simulator` | Client → Server | `{ customerId }` |
 | `simulator:message` | Server → Client | Inbound/outbound message sync |
 | `simulator:status` | Server → Client | Online status, 24h window updates |
+| `bot:handoff` | Server → Client | Bot transferred conversation to human queue |
 
 Client commands:
 
