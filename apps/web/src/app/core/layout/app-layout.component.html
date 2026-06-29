@@ -1,0 +1,47 @@
+<div class="layout" [class.collapsed]="sidebarCollapsed()">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">H</span>
+      @if (!sidebarCollapsed()) {
+        <span class="sidebar-title">{{ appName }}</span>
+      }
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.route) {
+        <a
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [title]="item.label"
+        >
+          <span class="material-icons nav-icon">{{ item.icon }}</span>
+          @if (!sidebarCollapsed()) {
+            <span class="nav-label">{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      @if (user(); as u) {
+        <div class="user-chip">
+          <span class="user-avatar">{{ getInitials() }}</span>
+          @if (!sidebarCollapsed()) {
+            <div class="user-details">
+              <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
+              <span class="user-role">{{ u.roles[0] }}</span>
+            </div>
+          }
+        </div>
+      }
+      <button class="logout-btn" (click)="logout()" [title]="'Logout'">
+        <span class="material-icons">logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

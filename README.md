@@ -1,96 +1,118 @@
-# Helix
+# HELIX
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+**Enterprise Customer Support Platform** — WhatsApp-first support with AI bot routing, human agent dashboard, Salesforce integration, and a built-in WhatsApp simulator for demos.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+Inspired by Zendesk, Intercom, Freshdesk, Salesforce Service Cloud, and Genesys.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Features
 
-## Run tasks
+- WhatsApp customer messaging (simulator + adapter pattern for Meta APIs)
+- AI bot with intent-based queue routing (refund, hotel, flight, complaint, general)
+- Three-pane agent inbox (Intercom-style)
+- Skill-based routing, queue management, SLA tracking
+- Salesforce Case sync (mock adapter in development)
+- Real-time updates via Socket.IO
+- Executive dashboard with ApexCharts
+- RBAC with departments, roles, and permissions
+- Campaigns, templates, CSAT, audit logs
 
-To run tasks with Nx use:
+## Tech Stack
 
-```sh
-npx nx <target> <project-name>
+| Layer | Technology |
+|-------|------------|
+| Frontend | Angular 21, Angular Material, Signals, RxJS, ApexCharts, Socket.IO |
+| Backend | NestJS, Prisma, PostgreSQL, Redis, BullMQ, Socket.IO, JWT |
+| Storage | MinIO (S3-compatible) |
+| Monorepo | Nx |
+| Testing | Jest, Cypress |
+| Infrastructure | Docker Compose |
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 22+
+- Docker & Docker Compose
+- npm 10+
+
+### 1. Clone and install
+
+```bash
+git clone <repository-url>
+cd Helix
+npm install --legacy-peer-deps
+cp .env.example .env
 ```
 
-For example:
+### 2. Start infrastructure
 
-```sh
-npx nx build myproject
+```bash
+docker compose up -d postgres redis minio minio-init
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### 3. Database setup
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
+```bash
+npm run db:generate
+npm run db:migrate
+npm run db:seed
 ```
 
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
+### 4. Run development servers
 
-```sh
-# Generate an app
-npx nx g @nx/react:app demo
-
-# Generate a library
-npx nx g @nx/react:lib some-lib
+```bash
+npm run dev
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+- **Web**: http://localhost:4200
+- **API**: http://localhost:3000/api
+- **Swagger**: http://localhost:3000/api/docs
+- **MinIO Console**: http://localhost:9001
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Docker (full stack)
 
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+```bash
+docker compose up -d
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+## Project Structure
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```
+apps/
+  api/          NestJS backend
+  web/          Angular frontend
+  web-e2e/      Cypress E2E tests
+packages/
+  types/        Shared TypeScript types
+  shared/       Constants, socket events
+  utils/        Utility functions
+  ui/           Shared Angular UI components
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Scripts
 
-## Install Nx Console
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start API + Web in parallel |
+| `npm run api:serve` | Start API only |
+| `npm run web:serve` | Start Web only |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:seed` | Seed development data |
+| `npm run test` | Run all unit tests |
+| `npm run lint` | Lint all projects |
+| `npm run build` | Build all projects |
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## Documentation
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Architecture](./docs/Architecture.md)
+- [API Reference](./docs/API.md)
+- [Database Schema](./docs/Database.md)
+- [Setup Guide](./docs/Setup.md)
+- [Deployment](./docs/Deployment.md)
+- [Development Plan](./DEVELOPMENT_PLAN.md)
+- [Project Progress](./PROJECT_PROGRESS.md)
 
-## Useful links
+## License
 
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+MIT

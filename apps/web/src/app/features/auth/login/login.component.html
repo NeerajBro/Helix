@@ -1,0 +1,65 @@
+<div class="login-page">
+  <div class="login-card-wrapper">
+    <div class="login-brand">
+      <span class="login-logo">H</span>
+      <h1>{{ appName }}</h1>
+      <p>Enterprise Customer Support Platform</p>
+    </div>
+
+    <mat-card class="login-card">
+      <mat-card-header>
+        <mat-card-title>Sign in to your account</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          @if (error()) {
+            <div class="login-error">{{ error() }}</div>
+          }
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" type="email" autocomplete="email" />
+            <mat-icon matPrefix>email</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              formControlName="password"
+              [type]="hidePassword() ? 'password' : 'text'"
+              autocomplete="current-password"
+            />
+            <mat-icon matPrefix>lock</mat-icon>
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="togglePassword()"
+              [attr.aria-label]="'Toggle password visibility'"
+            >
+              <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            class="login-submit"
+            [disabled]="form.invalid || loading()"
+          >
+            @if (loading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Sign In
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <p class="login-hint">Demo: admin@helix.com / Admin123!</p>
+  </div>
+</div>

@@ -1,0 +1,161 @@
+.admin-page {
+  padding: 24px 32px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a2332;
+  }
+
+  p {
+    margin: 0;
+    color: #607d8b;
+    font-size: 14px;
+  }
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 64px;
+}
+
+.tab-content {
+  padding: 24px 0;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.entity-card {
+  border-radius: var(--helix-border-radius) !important;
+
+  mat-card-title {
+    font-size: 16px !important;
+  }
+
+  p {
+    color: #607d8b;
+    font-size: 13px;
+    margin: 0 0 12px;
+  }
+}
+
+.dept-color {
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  margin-right: 12px;
+}
+
+.entity-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #90a4ae;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: var(--helix-border-radius);
+  overflow: hidden;
+  box-shadow: var(--helix-card-shadow);
+
+  th,
+  td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eceff1;
+  }
+
+  th {
+    background: #fafbfc;
+    font-size: 12px;
+    font-weight: 600;
+    color: #90a4ae;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    font-size: 14px;
+    color: #37474f;
+
+    small {
+      display: block;
+      color: #90a4ae;
+      font-size: 12px;
+    }
+
+    strong {
+      display: block;
+    }
+  }
+
+  tbody tr:hover {
+    background: #f5f7fa;
+  }
+}
+
+.summary-bar {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: var(--helix-border-radius);
+  box-shadow: var(--helix-card-shadow);
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-label {
+  font-size: 13px;
+  color: #607d8b;
+}
+
+.status-count {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a2332;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+mat-chip.active {
+  --mdc-chip-label-text-color: #2e7d32;
+  background: #e8f5e9 !important;
+}
+
+mat-chip.inactive {
+  --mdc-chip-label-text-color: #c62828;
+  background: #ffebee !important;
+}

@@ -1,0 +1,138 @@
+<div class="admin-page">
+  <header class="page-header">
+    <h1>Administration</h1>
+    <p>Manage departments, skills, queues, and agent availability</p>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <mat-tab-group animationDuration="200ms" class="admin-tabs">
+      <mat-tab label="Departments">
+        <div class="tab-content">
+          <div class="card-grid">
+            @for (dept of departments(); track dept.id) {
+              <mat-card class="entity-card">
+                <mat-card-header>
+                  <div class="dept-color" [style.background]="dept.color"></div>
+                  <mat-card-title>{{ dept.name }}</mat-card-title>
+                  <mat-card-subtitle>{{ dept.slug }}</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <p>{{ dept.description }}</p>
+                  <div class="entity-stats">
+                    <span>{{ dept.agentCount ?? 0 }} agents</span>
+                    <span>{{ dept.queueCount ?? 0 }} queues</span>
+                    <mat-chip [class.active]="dept.isActive" [class.inactive]="!dept.isActive">
+                      {{ dept.isActive ? 'Active' : 'Inactive' }}
+                    </mat-chip>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Skills">
+        <div class="tab-content">
+          <div class="card-grid">
+            @for (skill of skills(); track skill.id) {
+              <mat-card class="entity-card">
+                <mat-card-header>
+                  <mat-card-title>{{ skill.name }}</mat-card-title>
+                  <mat-card-subtitle>{{ skill.slug }}</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <p>{{ skill.description }}</p>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Queues">
+        <div class="tab-content">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Queue</th>
+                <th>Department</th>
+                <th>Strategy</th>
+                <th>Waiting</th>
+                <th>SLA (min)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (queue of queues(); track queue.id) {
+                <tr>
+                  <td>
+                    <strong>{{ queue.name }}</strong>
+                    <small>{{ queue.slug }}</small>
+                  </td>
+                  <td>{{ queue.departmentName }}</td>
+                  <td><mat-chip>{{ queue.routingStrategy }}</mat-chip></td>
+                  <td>{{ queue.waitingCount ?? 0 }}</td>
+                  <td>{{ queue.slaFirstResponse ?? '—' }} / {{ queue.slaResolution ?? '—' }}</td>
+                  <td>
+                    <mat-chip [class.active]="queue.isActive" [class.inactive]="!queue.isActive">
+                      {{ queue.isActive ? 'Active' : 'Inactive' }}
+                    </mat-chip>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Agent Availability">
+        <div class="tab-content">
+          <div class="summary-bar">
+            @for (status of ['ONLINE', 'BUSY', 'ON_BREAK', 'AWAY', 'OFFLINE']; track status) {
+              <div class="summary-item">
+                <span class="status-dot" [style.background]="statusColor(status)"></span>
+                <span class="status-label">{{ status }}</span>
+                <span class="status-count">{{ availSummary()[status] ?? 0 }}</span>
+              </div>
+            }
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Active / Capacity</th>
+                <th>Since</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (agent of availability(); track agent.id) {
+                <tr>
+                  <td><strong>{{ agent.userName }}</strong></td>
+                  <td>{{ agent.departmentName ?? '—' }}</td>
+                  <td>
+                    <span class="status-badge" [style.background]="statusColor(agent.status)">
+                      {{ agent.status }}
+                    </span>
+                    @if (agent.reason) {
+                      <small>{{ agent.reason }}</small>
+                    }
+                  </td>
+                  <td>{{ agent.activeConversations ?? 0 }} / {{ agent.maxCapacity ?? 5 }}</td>
+                  <td>{{ agent.since | date: 'short' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

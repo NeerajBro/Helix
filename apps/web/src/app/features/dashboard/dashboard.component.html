@@ -1,0 +1,34 @@
+<div class="dashboard-page">
+  <header class="page-header">
+    <h1>Executive Dashboard</h1>
+    <p>Real-time overview of support operations</p>
+  </header>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">Departments</span>
+      <span class="kpi-value">{{ stats().departments }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Active Queues</span>
+      <span class="kpi-value">{{ stats().queues }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Agents Online</span>
+      <span class="kpi-value success">{{ stats().agentsOnline }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Total Agents</span>
+      <span class="kpi-value">{{ stats().totalAgents }}</span>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <h2>Phase 3 Complete</h2>
+    <p>
+      Organization &amp; Queue Engine is live. Departments, skills, queues, business hours,
+      agent availability, and the priority engine are operational. Conversation data and
+      charts arrive in Phases 4 and 9.
+    </p>
+  </div>
+</div>

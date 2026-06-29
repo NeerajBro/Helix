@@ -1,0 +1,37 @@
+// HELIX Design Tokens
+$helix-primary: #1565c0;
+$helix-primary-light: #1976d2;
+$helix-primary-dark: #0d47a1;
+$helix-accent: #00bcd4;
+$helix-warn: #f44336;
+$helix-success: #4caf50;
+
+$helix-sidebar-bg: #1a2332;
+$helix-sidebar-text: #b0bec5;
+$helix-sidebar-active: #ffffff;
+$helix-workspace-bg: #f5f7fa;
+
+$helix-border-radius: 12px;
+$helix-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+$helix-transition: 0.2s ease-in-out;
+
+:root {
+  --helix-primary: #{$helix-primary};
+  --helix-primary-light: #{$helix-primary-light};
+  --helix-accent: #{$helix-accent};
+  --helix-sidebar-bg: #{$helix-sidebar-bg};
+  --helix-workspace-bg: #{$helix-workspace-bg};
+  --helix-border-radius: #{$helix-border-radius};
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  background-color: var(--helix-workspace-bg);
+}
