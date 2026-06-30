@@ -34,6 +34,7 @@ import {
   WHATSAPP_ADAPTER,
   WhatsAppAdapter,
 } from '../../adapters/whatsapp/whatsapp.adapter';
+import { SalesforceSyncService } from '../integrations/salesforce-sync.service';
 
 @Injectable()
 export class ConversationsService {
@@ -42,6 +43,7 @@ export class ConversationsService {
     private readonly minio: MinioService,
     private readonly realtime: RealtimeService,
     @Inject(WHATSAPP_ADAPTER) private readonly whatsapp: WhatsAppAdapter,
+    private readonly salesforceSync: SalesforceSyncService,
   ) {}
 
   async findAll(query: ConversationQueryDto) {
@@ -114,6 +116,7 @@ export class ConversationsService {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
+        salesforceCase: true,
       },
     });
 
@@ -166,6 +169,7 @@ export class ConversationsService {
       result.departmentId,
       result.assignedAgentId,
     );
+    void this.salesforceSync.syncOnCreate(conversation.id);
     return result;
   }
 
@@ -226,6 +230,7 @@ export class ConversationsService {
       agentId: dto.agentId,
       conversation: result,
     });
+    void this.salesforceSync.syncOnAssign(id);
     return result;
   }
 
@@ -263,6 +268,7 @@ export class ConversationsService {
       dto.departmentId,
       result.assignedAgentId,
     );
+    void this.salesforceSync.syncOnTransfer(id);
     return result;
   }
 
@@ -290,6 +296,7 @@ export class ConversationsService {
       result.departmentId,
       result.assignedAgentId,
     );
+    void this.salesforceSync.syncOnResolve(id);
     return result;
   }
 
@@ -313,6 +320,7 @@ export class ConversationsService {
       result.departmentId,
       result.assignedAgentId,
     );
+    void this.salesforceSync.syncOnClose(id);
     return result;
   }
 
@@ -692,6 +700,18 @@ export class ConversationsService {
       agent: { id: string; firstName: string; lastName: string };
     }[];
     messages: { content: string; createdAt: Date }[];
+    salesforceCase: {
+      id: string;
+      conversationId: string;
+      salesforceCaseId: string | null;
+      caseNumber: string | null;
+      subject: string | null;
+      status: string | null;
+      priority: string | null;
+      syncStatus: string;
+      lastSyncedAt: Date | null;
+      syncError: string | null;
+    } | null;
   }) {
     const lastMessage = conversation.messages[0];
     return {
@@ -751,6 +771,9 @@ export class ConversationsService {
         reason: a.reason ?? undefined,
         createdAt: a.createdAt.toISOString(),
       })),
+      salesforceCase: conversation.salesforceCase
+        ? this.salesforceSync.mapCaseRecord(conversation.salesforceCase)
+        : undefined,
       lastMessage: lastMessage?.content,
       lastMessageAt: lastMessage?.createdAt.toISOString(),
     };

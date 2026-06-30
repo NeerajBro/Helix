@@ -174,6 +174,66 @@
         </section>
 
         <section class="profile-section">
+          <h3>Bookings</h3>
+          @if (loadingBookings()) {
+            <p class="pane-hint">Loading bookings...</p>
+          } @else if (!bookings().length) {
+            <p class="pane-hint">No bookings on file</p>
+          } @else {
+            @for (booking of bookings(); track booking.id) {
+              <div class="booking-item">
+                <div class="booking-head">
+                  <span class="material-icons booking-icon">{{ bookingTypeIcon(booking.type) }}</span>
+                  <span class="booking-ref">{{ booking.reference }}</span>
+                  <span class="badge booking-status">{{ booking.status }}</span>
+                </div>
+                @if (booking.description) {
+                  <p class="booking-desc">{{ booking.description }}</p>
+                }
+                <div class="booking-dates">
+                  @if (booking.startDate) {
+                    <span>{{ booking.startDate | date: 'mediumDate' }}</span>
+                  }
+                  @if (booking.endDate) {
+                    <span>→ {{ booking.endDate | date: 'mediumDate' }}</span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </section>
+
+        @if (d.salesforceCase; as sf) {
+          <section class="profile-section">
+            <h3>Salesforce Case</h3>
+            <div class="sf-card">
+              <div class="sf-row">
+                <span>Case #</span>
+                <strong>{{ sf.caseNumber || '—' }}</strong>
+              </div>
+              <div class="sf-row">
+                <span>Status</span>
+                <span class="badge status" [class]="statusClass(sf.status || '')">{{ sf.status || '—' }}</span>
+              </div>
+              <div class="sf-row">
+                <span>Priority</span>
+                {{ sf.priority || '—' }}
+              </div>
+              <div class="sf-row">
+                <span>Sync</span>
+                <span class="badge sync" [class]="sf.syncStatus.toLowerCase()">{{ sf.syncStatus }}</span>
+              </div>
+              @if (sf.subject) {
+                <p class="sf-subject">{{ sf.subject }}</p>
+              }
+              @if (sfCaseUrl(sf); as url) {
+                <a class="sf-link" [href]="url" target="_blank" rel="noopener">View in Salesforce ↗</a>
+              }
+            </div>
+          </section>
+        }
+
+        <section class="profile-section">
           <div class="section-head">
             <h3>AI Summary</h3>
             <button type="button" class="link-btn" (click)="refreshSummary()">Regenerate</button>

@@ -6,5 +6,6 @@ export * from './lib/conversation';
 export * from './lib/dashboard';
 export * from './lib/simulator';
 export * from './lib/bot';
+export * from './lib/integrations';
 export * from './lib/user';
 export * from './lib/organization';

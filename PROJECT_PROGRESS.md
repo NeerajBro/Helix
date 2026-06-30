@@ -15,23 +15,21 @@ Last updated: 2026-06-29
 | 7 | AI Bot Engine | ✅ Complete | 100% |
 | 8 | Agent Inbox UI | ✅ Complete | 100% |
 | 9 | Dashboard & Analytics | ✅ Complete | 100% |
-| 10 | Salesforce & Bookings | ⬜ Not Started | 0% |
+| 10 | Salesforce & Bookings | ✅ Complete | 100% |
 | 11 | Reports & CSAT | ⬜ Not Started | 0% |
 | 12 | Administration & Campaigns | ⬜ Not Started | 0% |
 | 13 | Testing & Production Readiness | ⬜ Not Started | 0% |
 
-**Overall: ~69% complete (Phases 1–9 of 13)**
+**Overall: ~77% complete (Phases 1–10 of 13)**
 
-## Phase 9 Deliverables
+## Phase 10 Deliverables
 
-- [x] Extended dashboard stats API (SLA breached, avg first response)
-- [x] Analytics API with trends, department distribution, agent performance
-- [x] ApexCharts integration (area, donut, bar charts)
-- [x] 11 KPI cards with live Socket.IO updates
-- [x] Conversation trend chart (7/14/30 day toggle)
-- [x] Department distribution donut chart
-- [x] Agent utilization bar chart and performance table
+- [x] Salesforce adapter interface + mock adapter (REST stub for production)
+- [x] `SalesforceSyncService` — case create on conversation start, update on handoff/assign/transfer/resolve/close
+- [x] Booking adapter (Prisma-backed) + `BookingsModule` API
+- [x] Seed data: ~70 bookings + sample Salesforce cases
+- [x] Inbox profile: bookings list + Salesforce case card with sync status
 
-## Next Up: Phase 10
+## Next Up: Phase 11
 
-Salesforce & Bookings Integration — case sync and booking lookup adapters.
+Reports & CSAT — operational reports, SLA tracking, CSAT survey flow, exports.

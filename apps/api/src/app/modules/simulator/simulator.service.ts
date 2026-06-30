@@ -19,6 +19,7 @@ import { SimulatorCustomerSummary, SimulatorConversationState } from '@helix/typ
 import { SimulatorCustomerQueryDto, SimulatorPresenceDto, SimulatorSendMessageDto } from './dto/simulator.dto';
 import { buildPaginatedResponse, parsePagination } from '@helix/utils';
 import { BotService } from '../bot/bot.service';
+import { SalesforceSyncService } from '../integrations/salesforce-sync.service';
 
 const ACTIVE_STATUSES: ConversationStatus[] = ['OPEN', 'PENDING', 'WAITING', 'TRANSFERRED'];
 
@@ -30,6 +31,7 @@ export class SimulatorService {
     private readonly realtime: RealtimeService,
     @Inject(WHATSAPP_ADAPTER) private readonly whatsapp: WhatsAppAdapter,
     private readonly botService: BotService,
+    private readonly salesforceSync: SalesforceSyncService,
   ) {}
 
   async listCustomers(query: SimulatorCustomerQueryDto) {
@@ -280,6 +282,8 @@ export class SimulatorService {
       conversation.departmentId,
       null,
     );
+
+    void this.salesforceSync.syncOnCreate(conversation.id);
 
     return conversation;
   }

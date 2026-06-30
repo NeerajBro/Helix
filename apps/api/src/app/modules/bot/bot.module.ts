@@ -4,9 +4,10 @@ import { BotService } from './bot.service';
 import { QueuesModule } from '../queues/queues.module';
 import { BotAdapterModule } from '../../adapters/bot/bot.module';
 import { AiAdapterModule } from '../../adapters/ai/ai.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
-  imports: [QueuesModule, BotAdapterModule, AiAdapterModule],
+  imports: [QueuesModule, BotAdapterModule, AiAdapterModule, IntegrationsModule],
   controllers: [BotController],
   providers: [BotService],
   exports: [BotService],

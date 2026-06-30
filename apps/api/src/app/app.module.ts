@@ -22,6 +22,10 @@ import { WhatsAppAdapterModule } from './adapters/whatsapp/whatsapp.module';
 import { BotAdapterModule } from './adapters/bot/bot.module';
 import { AiAdapterModule } from './adapters/ai/ai.module';
 import { BotModule } from './modules/bot/bot.module';
+import { SalesforceAdapterModule } from './adapters/salesforce/salesforce.module';
+import { BookingAdapterModule } from './adapters/booking/booking.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 import { JwtAuthGuard } from './core/guards/jwt-auth.guard';
 import { PermissionsGuard } from './core/guards/permissions.guard';
 import {
@@ -45,6 +49,10 @@ import {
     WhatsAppAdapterModule,
     BotAdapterModule,
     AiAdapterModule,
+    SalesforceAdapterModule,
+    BookingAdapterModule,
+    IntegrationsModule,
+    BookingsModule,
     AuthModule,
     UsersModule,
     RolesModule,

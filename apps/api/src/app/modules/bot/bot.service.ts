@@ -22,6 +22,7 @@ import {
   BotIntent,
 } from '@helix/types';
 import { SOCKET_EVENTS } from '@helix/shared';
+import { SalesforceSyncService } from '../integrations/salesforce-sync.service';
 import {
   INTENT_DEPARTMENT_SLUG,
   INTENT_QUEUE_SLUG,
@@ -40,6 +41,7 @@ export class BotService {
     @Inject(BOT_ADAPTER) private readonly bot: BotAdapter,
     @Inject(AI_ADAPTER) private readonly ai: AiAdapter,
     @Inject(WHATSAPP_ADAPTER) private readonly whatsapp: WhatsAppAdapter,
+    private readonly salesforceSync: SalesforceSyncService,
   ) {}
 
   async handleCustomerMessage(conversationId: string, _messageId: string): Promise<void> {
@@ -276,6 +278,8 @@ export class BotService {
       : `I've placed you in the ${label} queue. The next available agent will join shortly — thank you for your patience.`;
 
     await this.sendBotMessage(conversationId, handoffMessage, { isHandoff: true });
+
+    void this.salesforceSync.syncOnHandoff(conversationId);
 
     const updated = await this.prisma.conversation.findUniqueOrThrow({
       where: { id: conversationId },

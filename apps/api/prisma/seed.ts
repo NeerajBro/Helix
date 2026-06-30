@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PERMISSION_MODULES, DEPARTMENT_SLUGS, ROLE_SLUGS, SKILL_SLUGS } from '@helix/shared';
 import { seedPhase4 } from './seed-phase4';
+import { seedPhase10 } from './seed-phase10';
 
 const prisma = new PrismaClient();
 
@@ -312,6 +313,7 @@ async function main(): Promise<void> {
   console.log('  ✓ Default WhatsApp number');
 
   await seedPhase4(prisma);
+  await seedPhase10(prisma);
 
   console.log('✅ Seed complete!');
 }

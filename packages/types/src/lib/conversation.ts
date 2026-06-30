@@ -6,6 +6,7 @@ import {
   MessageSenderType,
   MessageStatus,
 } from './enums';
+import { SalesforceCaseDto } from './integrations';
 
 export interface ConversationSummary {
   id: string;
@@ -87,6 +88,7 @@ export interface ConversationDetail extends ConversationSummary {
     reason?: string;
     createdAt: string;
   }[];
+  salesforceCase?: SalesforceCaseDto;
 }
 
 export interface MessageDto {

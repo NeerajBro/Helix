@@ -122,6 +122,16 @@ Authorization: Bearer <access_token>
 | PATCH | `/customers/:id` | `conversations:update` | Update customer |
 | DELETE | `/customers/:id` | `conversations:delete` | Soft delete customer |
 
+## Bookings (Phase 10)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/bookings` | `conversations:read` | List bookings (paginated, optional `reference` filter) |
+| GET | `/bookings/lookup` | `conversations:read` | Lookup booking by `reference` query param |
+| GET | `/bookings/customers/:customerId` | `conversations:read` | Bookings for a customer |
+
+Conversation detail (`GET /conversations/:id`) includes `salesforceCase` when synced.
+
 ## Conversations (Phase 4)
 
 | Method | Path | Permission | Description |

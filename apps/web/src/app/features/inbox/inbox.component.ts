@@ -18,12 +18,15 @@ import {
 import { SocketService } from '../../core/services/socket.service';
 import { OrganizationService } from '../../core/services/organization.service';
 import { AuthService } from '../../core/services/auth.service';
+import { BookingsService } from '../../core/services/bookings.service';
 import {
   ConversationDetail,
   ConversationSummary,
   DepartmentDto,
   InboxMessage,
   QueueDto,
+  BookingDto,
+  SalesforceCaseDto,
 } from '@helix/types';
 import { ConversationStatus } from '@helix/types';
 
@@ -47,6 +50,7 @@ export class InboxComponent implements OnInit, OnDestroy {
   private readonly socketService = inject(SocketService);
   private readonly orgService = inject(OrganizationService);
   private readonly authService = inject(AuthService);
+  private readonly bookingsService = inject(BookingsService);
 
   @ViewChild('threadBody') threadBody?: ElementRef<HTMLDivElement>;
 
@@ -69,6 +73,9 @@ export class InboxComponent implements OnInit, OnDestroy {
   protected readonly mineOnly = signal(false);
   protected readonly draft = signal('');
   protected readonly noteDraft = signal('');
+
+  protected readonly bookings = signal<BookingDto[]>([]);
+  protected readonly loadingBookings = signal(false);
 
   protected readonly showTransfer = signal(false);
   protected readonly transferDeptId = signal('');
@@ -127,11 +134,13 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.loadingThread.set(true);
     this.detail.set(null);
     this.messages.set([]);
+    this.bookings.set([]);
 
     this.conversationsService.get(id).subscribe({
       next: (d) => {
         this.detail.set(d);
         this.loadingThread.set(false);
+        this.loadBookings(d.customer.id);
       },
       error: () => this.loadingThread.set(false),
     });
@@ -279,6 +288,35 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   protected formatSummary(text?: string): string {
     return text ?? 'No AI summary yet. Hand off from bot or click Regenerate.';
+  }
+
+  protected sfCaseUrl(sfCase: SalesforceCaseDto): string | null {
+    if (!sfCase.salesforceCaseId) return null;
+    return `https://login.salesforce.com/${sfCase.salesforceCaseId}`;
+  }
+
+  protected bookingTypeIcon(type: string): string {
+    switch (type) {
+      case 'FLIGHT':
+        return 'flight';
+      case 'HOTEL':
+        return 'hotel';
+      case 'PACKAGE':
+        return 'luggage';
+      default:
+        return 'confirmation_number';
+    }
+  }
+
+  private loadBookings(customerId: string): void {
+    this.loadingBookings.set(true);
+    this.bookingsService.getByCustomer(customerId).subscribe({
+      next: (items) => {
+        this.bookings.set(items);
+        this.loadingBookings.set(false);
+      },
+      error: () => this.loadingBookings.set(false),
+    });
   }
 
   private loadDepartments(): void {

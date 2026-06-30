@@ -156,11 +156,11 @@ Enterprise-grade phased delivery plan. Each phase is fully completed before movi
 
 | Deliverable | Status |
 |-------------|--------|
-| Salesforce adapter interface | ⬜ |
-| Mock Salesforce adapter | ⬜ |
-| Case create/update on conversation events | ⬜ |
-| Booking lookup module | ⬜ |
-| Customer profile booking display | ⬜ |
+| Salesforce adapter interface | ✅ |
+| Mock Salesforce adapter | ✅ |
+| Case create/update on conversation events | ✅ |
+| Booking lookup module | ✅ |
+| Customer profile booking display | ✅ |
 
 ---
 

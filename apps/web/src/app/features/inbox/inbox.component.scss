@@ -545,6 +545,105 @@
   margin-top: 16px;
 }
 
+.booking-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #eef2f6;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.booking-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.booking-icon {
+  font-size: 18px;
+  color: #1565c0;
+}
+
+.booking-ref {
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.booking-status {
+  margin-left: auto;
+  text-transform: capitalize;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.booking-desc {
+  margin: 4px 0 0 26px;
+  font-size: 12px;
+  color: #607d8b;
+}
+
+.booking-dates {
+  margin: 4px 0 0 26px;
+  font-size: 11px;
+  color: #90a4ae;
+}
+
+.sf-card {
+  background: #f8fafc;
+  border: 1px solid #e3eaf2;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.sf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+
+  span:first-child {
+    color: #78909c;
+  }
+}
+
+.sf-subject {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #455a64;
+}
+
+.sf-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #1565c0;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.badge.sync {
+  &.synced {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.pending {
+    background: #fff8e1;
+    color: #f57f17;
+  }
+
+  &.failed {
+    background: #ffebee;
+    color: #c62828;
+  }
+}
+
 @media (max-width: 1100px) {
   .inbox-layout {
     grid-template-columns: 260px 1fr;
