@@ -1,0 +1,312 @@
+<div class="reports-page">
+  <header class="page-header">
+    <div>
+      <h1>Reports</h1>
+      <p>Operational analytics, SLA compliance, and customer satisfaction</p>
+    </div>
+    <div class="header-actions">
+      <div class="range-tabs">
+        @for (d of [7, 14, 30]; track d) {
+          <button type="button" class="tab" [class.active]="rangeDays() === d && !customFrom()" (click)="setRange(d)">
+            {{ d }}d
+          </button>
+        }
+      </div>
+      <div class="custom-range">
+        <input type="date" [ngModel]="customFrom()" (ngModelChange)="customFrom.set($event)" />
+        <span>to</span>
+        <input type="date" [ngModel]="customTo()" (ngModelChange)="customTo.set($event)" />
+        <button type="button" class="btn secondary" (click)="applyCustomRange()">Apply</button>
+      </div>
+      <button type="button" class="btn primary" (click)="exportCurrentTab()">Export CSV</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="hint">Loading reports...</p>
+  } @else if (data(); as r) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">Conversations</span>
+        <span class="kpi-value">{{ r.summary.totalConversations }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Resolved</span>
+        <span class="kpi-value success">{{ r.summary.resolved }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">SLA Compliance</span>
+        <span class="kpi-value" [class.danger]="r.summary.slaComplianceRate < 90">{{ r.summary.slaComplianceRate }}%</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">CSAT Avg</span>
+        <span class="kpi-value">{{ r.summary.csatAverage || '—' }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Bot Handoff</span>
+        <span class="kpi-value">{{ r.summary.botHandoffRate }}%</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Avg First Response</span>
+        <span class="kpi-value">{{ r.summary.avgFirstResponseMinutes }}m</span>
+      </div>
+    </div>
+
+    <nav class="module-tabs">
+      @for (mod of [
+        { id: 'team', label: 'Team Reports' },
+        { id: 'bot', label: 'Bot Reports' },
+        { id: 'custom', label: 'Custom Reports' },
+      ]; track mod.id) {
+        <button
+          type="button"
+          class="module-tab"
+          [class.active]="activeModule() === mod.id"
+          (click)="setModule($any(mod.id))"
+        >
+          {{ mod.label }}
+        </button>
+      }
+    </nav>
+
+    <nav class="report-tabs">
+      @switch (activeModule()) {
+        @case ('team') {
+          @for (tab of [
+            { id: 'overview', label: 'Overview' },
+            { id: 'agents', label: 'Agents' },
+            { id: 'departments', label: 'Departments' },
+            { id: 'sla', label: 'SLA' },
+            { id: 'csat', label: 'CSAT' },
+          ]; track tab.id) {
+            <button type="button" class="tab" [class.active]="activeTab() === tab.id" (click)="setTab($any(tab.id))">
+              {{ tab.label }}
+            </button>
+          }
+        }
+        @case ('bot') {
+          <button type="button" class="tab active">Bot Handoffs</button>
+        }
+        @case ('custom') {
+          @for (tab of [
+            { id: 'overview', label: 'Overview' },
+            { id: 'departments', label: 'Departments' },
+            { id: 'agents', label: 'Agents' },
+            { id: 'sla', label: 'SLA' },
+            { id: 'csat', label: 'CSAT' },
+          ]; track tab.id) {
+            <button type="button" class="tab" [class.active]="activeTab() === tab.id" (click)="setTab($any(tab.id))">
+              {{ tab.label }}
+            </button>
+          }
+        }
+      }
+    </nav>
+
+    @switch (activeTab()) {
+      @case ('overview') {
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>CSAT Distribution</h3>
+            <apx-chart [chart]="csatChart().chart" [series]="csatSeries()" [xaxis]="csatChart().xaxis" [colors]="csatChart().colors" [dataLabels]="csatChart().dataLabels" [plotOptions]="csatChart().plotOptions" [yaxis]="csatChart().yaxis"></apx-chart>
+          </div>
+          <div class="chart-card">
+            <h3>Bot Handoff Intents</h3>
+            @if (r.bot.intentBreakdown.length) {
+              <apx-chart [chart]="botChart().chart" [series]="botSeries()" [labels]="botChart().labels" [legend]="botChart().legend" [dataLabels]="botChart().dataLabels"></apx-chart>
+            } @else {
+              <p class="hint">No bot handoffs in this period</p>
+            }
+          </div>
+        </div>
+      }
+      @case ('departments') {
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Total</th>
+                <th>Resolved</th>
+                <th>Open</th>
+                <th>Avg 1st Response</th>
+                <th>SLA Breached</th>
+                <th>CSAT</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of r.departments; track row.departmentId) {
+                <tr>
+                  <td>{{ row.departmentName }}</td>
+                  <td>{{ row.total }}</td>
+                  <td>{{ row.resolved }}</td>
+                  <td>{{ row.open }}</td>
+                  <td>{{ row.avgFirstResponseMinutes }}m</td>
+                  <td [class.danger]="row.slaBreached > 0">{{ row.slaBreached }}</td>
+                  <td>{{ row.csatAverage ?? '—' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="hint">No data for this period</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @case ('agents') {
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Department</th>
+                <th>Assigned</th>
+                <th>Resolved</th>
+                <th>Avg 1st Response</th>
+                <th>Avg Resolution</th>
+                <th>CSAT</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of r.agents; track row.agentId) {
+                <tr>
+                  <td>{{ row.agentName }}</td>
+                  <td>{{ row.departmentName ?? '—' }}</td>
+                  <td>{{ row.assigned }}</td>
+                  <td>{{ row.resolved }}</td>
+                  <td>{{ row.avgFirstResponseMinutes }}m</td>
+                  <td>{{ row.avgResolutionMinutes }}m</td>
+                  <td>{{ row.csatAverage ?? '—' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="hint">No agent activity in this period</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @case ('bot') {
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Bot Metrics</h3>
+            <div class="metric-list">
+              <div><span>Total conversations</span><strong>{{ r.bot.totalConversations }}</strong></div>
+              <div><span>Still bot-handled</span><strong>{{ r.bot.botHandled }}</strong></div>
+              <div><span>Handoffs to agents</span><strong>{{ r.bot.handoffCount }}</strong></div>
+              <div><span>Handoff rate</span><strong>{{ r.bot.handoffRate }}%</strong></div>
+              <div><span>Avg messages before handoff</span><strong>{{ r.bot.avgMessagesBeforeHandoff }}</strong></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Intent Breakdown</h3>
+            @if (r.bot.intentBreakdown.length) {
+              <apx-chart [chart]="botChart().chart" [series]="botSeries()" [labels]="botChart().labels" [legend]="botChart().legend" [dataLabels]="botChart().dataLabels"></apx-chart>
+            } @else {
+              <p class="hint">No handoff data</p>
+            }
+          </div>
+        </div>
+      }
+      @case ('sla') {
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>SLA Summary</h3>
+            <div class="metric-list">
+              <div><span>Compliance rate</span><strong [class.danger]="r.sla.complianceRate < 90">{{ r.sla.complianceRate }}%</strong></div>
+              <div><span>Breached</span><strong class="danger">{{ r.sla.breached }}</strong></div>
+              <div><span>First response target</span><strong>{{ r.sla.firstResponseTargetMinutes }}m</strong></div>
+              <div><span>Resolution target</span><strong>{{ r.sla.resolutionTargetMinutes }}m</strong></div>
+              <div><span>Avg first response</span><strong>{{ r.sla.avgFirstResponseMinutes }}m</strong></div>
+              <div><span>Avg resolution</span><strong>{{ r.sla.avgResolutionMinutes }}m</strong></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Breaches by Department</h3>
+            @if (r.sla.byDepartment.length) {
+              <apx-chart [chart]="slaDeptChart().chart" [series]="slaDeptSeries()" [xaxis]="slaDeptChart().xaxis" [colors]="slaDeptChart().colors" [plotOptions]="slaDeptChart().plotOptions" [dataLabels]="slaDeptChart().dataLabels"></apx-chart>
+            } @else {
+              <p class="hint">No SLA breaches</p>
+            }
+          </div>
+        </div>
+        @if (r.sla.recentBreaches.length) {
+          <div class="table-card">
+            <h3>Recent SLA Breaches</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Department</th>
+                  <th>Type</th>
+                  <th>Overdue</th>
+                  <th>When</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of r.sla.recentBreaches; track b.conversationId) {
+                  <tr>
+                    <td>{{ b.customerName || b.customerPhone }}</td>
+                    <td>{{ b.departmentName ?? '—' }}</td>
+                    <td>{{ b.breachType }}</td>
+                    <td class="danger">{{ b.minutesOverdue }}m</td>
+                    <td>{{ b.breachedAt | date: 'short' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+      @case ('csat') {
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Rating Distribution</h3>
+            <apx-chart [chart]="csatChart().chart" [series]="csatSeries()" [xaxis]="csatChart().xaxis" [colors]="csatChart().colors" [dataLabels]="csatChart().dataLabels" [plotOptions]="csatChart().plotOptions" [yaxis]="csatChart().yaxis"></apx-chart>
+          </div>
+          <div class="chart-card">
+            <h3>CSAT Summary</h3>
+            <div class="metric-list">
+              <div><span>Average rating</span><strong>{{ r.csat.averageRating }}/5</strong></div>
+              <div><span>Total responses</span><strong>{{ r.csat.totalResponses }}</strong></div>
+            </div>
+            <h4>By Agent</h4>
+            @for (a of r.csat.byAgent; track a.agentId) {
+              <div class="agent-csat-row">
+                <span>{{ a.agentName }}</span>
+                <span>{{ a.average }}/5 ({{ a.count }})</span>
+              </div>
+            } @empty {
+              <p class="hint">No agent CSAT data</p>
+            }
+          </div>
+        </div>
+        @if (r.csat.recent.length) {
+          <div class="table-card">
+            <h3>Recent Feedback</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Agent</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of r.csat.recent; track s.id) {
+                  <tr>
+                    <td>{{ s.customerName ?? '—' }}</td>
+                    <td>{{ s.agentName ?? '—' }}</td>
+                    <td>{{ s.rating }}/5</td>
+                    <td>{{ s.comment ?? '—' }}</td>
+                    <td>{{ s.createdAt | date: 'short' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    }
+  }
+</div>

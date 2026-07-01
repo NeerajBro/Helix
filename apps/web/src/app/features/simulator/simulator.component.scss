@@ -349,6 +349,42 @@
   }
 }
 
+.csat-prompt {
+  padding: 12px 16px;
+  background: #fff8e1;
+  border-top: 1px solid #ffe082;
+  text-align: center;
+
+  p {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #5d4037;
+  }
+}
+
+.csat-stars {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.star-btn {
+  padding: 6px 10px;
+  border: 1px solid #ffb300;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    background: #fff3cd;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
 @media (max-width: 900px) {
   .simulator-layout {
     grid-template-columns: 1fr;

@@ -1,0 +1,36 @@
+<div class="bot-page">
+  <header class="page-header">
+    <div>
+      <h1>Bot Studio</h1>
+      <p>Intent rules, queue routing, and recipe automation</p>
+    </div>
+    <a class="btn secondary" routerLink="/simulator">Test in simulator</a>
+  </header>
+
+  @if (loading()) {
+    <p class="hint">Loading bot recipes...</p>
+  } @else {
+    <div class="intents-grid">
+      @for (intent of intents(); track intent.intent) {
+        <div class="intent-card">
+          <div class="intent-header">
+            <span class="material-icons">smart_toy</span>
+            <h3>{{ intent.label }}</h3>
+          </div>
+          <div class="intent-routing">
+            <span><strong>Queue:</strong> {{ intent.queueSlug }}</span>
+            <span><strong>Department:</strong> {{ intent.departmentSlug }}</span>
+          </div>
+          <div class="keywords">
+            @for (kw of intent.keywords.slice(0, 6); track kw) {
+              <span class="keyword">{{ kw }}</span>
+            }
+            @if (intent.keywords.length > 6) {
+              <span class="keyword more">+{{ intent.keywords.length - 6 }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

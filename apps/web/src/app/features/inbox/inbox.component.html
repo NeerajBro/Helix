@@ -1,109 +1,183 @@
 <div class="inbox-page">
-  <header class="inbox-header">
-    <div>
-      <h1>Inbox</h1>
-      <p>Manage customer conversations in real time</p>
-    </div>
-    <div class="header-actions">
-      <label class="mine-toggle">
-        <input type="checkbox" [ngModel]="mineOnly()" (ngModelChange)="mineOnly.set($event); loadConversations()" />
-        My conversations
-      </label>
-    </div>
-  </header>
-
   <div class="inbox-layout">
-    <!-- Conversation list -->
+    <!-- Left: conversation list (Verloop "All Conversations") -->
     <aside class="list-pane">
-      <div class="list-toolbar">
-        <input
-          type="search"
-          placeholder="Search name or phone..."
-          [ngModel]="search()"
-          (ngModelChange)="search.set($event)"
-          (keyup.enter)="loadConversations()"
-        />
-        <div class="status-tabs">
-          @for (f of statusFilters; track f.value) {
-            <button
-              type="button"
-              class="tab"
-              [class.active]="statusFilter() === f.value"
-              (click)="statusFilter.set(f.value); loadConversations()"
-            >
-              {{ f.label }}
-            </button>
-          }
-        </div>
+      <div class="list-header">
+        <h2>All Conversations</h2>
+        <label class="mine-toggle">
+          <input type="checkbox" [ngModel]="mineOnly()" (ngModelChange)="mineOnly.set($event); loadConversations()" />
+          Mine only
+        </label>
       </div>
 
-      @if (loadingList()) {
-        <p class="pane-hint">Loading conversations...</p>
-      } @else if (!conversations().length) {
-        <p class="pane-hint">No conversations found</p>
-      } @else {
-        <ul class="conv-list">
-          @for (c of conversations(); track c.id) {
-            <li>
+      <div class="list-toolbar">
+        <div class="search-wrap">
+          <span class="material-icons">search</span>
+          <input
+            type="search"
+            placeholder="Search by name or phone..."
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+            (keyup.enter)="loadConversations()"
+          />
+        </div>
+
+        <div class="segment-tabs source-tabs">
+          <button type="button" [class.active]="sourceFilter() === 'agent'" (click)="setSourceFilter('agent')">Agent</button>
+          <button type="button" [class.active]="sourceFilter() === 'bot'" (click)="setSourceFilter('bot')">Bot</button>
+          <button type="button" [class.active]="sourceFilter() === 'all'" (click)="setSourceFilter('all')">All</button>
+        </div>
+
+        <div class="waiting-tabs">
+          <button type="button" class="pill" [class.active]="waitingFilter() === ''" (click)="setWaitingFilter('')">Open</button>
+          <button type="button" class="pill" [class.active]="waitingFilter() === 'waitingOnAgent'" (click)="setWaitingFilter('waitingOnAgent')">Waiting on me</button>
+          <button type="button" class="pill" [class.active]="waitingFilter() === 'waitingOnCustomer'" (click)="setWaitingFilter('waitingOnCustomer')">Waiting on user</button>
+        </div>
+
+        <button type="button" class="filter-toggle" (click)="showAdvancedFilters.update(v => !v)">
+          <span class="material-icons">filter_list</span>
+          {{ showAdvancedFilters() ? 'Hide filters' : 'More filters' }}
+        </button>
+
+        @if (showAdvancedFilters()) {
+          <div class="status-tabs">
+            @for (f of statusFilters; track f.value) {
               <button
                 type="button"
-                class="conv-item"
-                [class.active]="c.id === selectedId()"
-                (click)="selectConversation(c.id)"
+                class="pill"
+                [class.active]="statusFilter() === f.value"
+                (click)="statusFilter.set(f.value); loadConversations()"
               >
-                <div class="conv-top">
-                  <span class="conv-name">{{ c.customerName || c.customerPhone }}</span>
-                  <span class="conv-time">{{ c.lastMessageAt || c.updatedAt | date: 'shortTime' }}</span>
-                </div>
-                <div class="conv-preview">{{ c.lastMessage || c.subject || 'No messages' }}</div>
-                <div class="conv-meta">
-                  <span class="badge status" [class]="statusClass(c.status)">{{ c.status }}</span>
-                  @if (c.priority !== 'NORMAL') {
-                    <span class="badge priority" [class]="priorityClass(c.priority)">{{ c.priority }}</span>
-                  }
-                  @if (c.botHandled) {
-                    <span class="badge bot">Bot</span>
-                  }
-                  @if (c.slaBreached) {
-                    <span class="badge sla">SLA</span>
-                  }
-                </div>
+                {{ f.label }}
               </button>
-            </li>
-          }
-        </ul>
+            }
+          </div>
+        }
+      </div>
+
+      @if (newChatCount() > 0) {
+        <div class="new-chat-banner">
+          <span>{{ newChatCount() }} new chat(s)</span>
+          <button type="button" class="btn-load" (click)="loadNewChats()">Load</button>
+        </div>
       }
+
+      <div class="conv-list-wrap">
+        @if (loadingList()) {
+          <p class="pane-hint">Loading conversations...</p>
+        } @else if (!conversations().length) {
+          <p class="pane-hint">No conversations found</p>
+        } @else {
+          <ul class="conv-list">
+            @for (c of conversations(); track c.id) {
+              <li>
+                <button
+                  type="button"
+                  class="conv-item"
+                  [class.active]="c.id === selectedId()"
+                  (click)="selectConversation(c.id)"
+                >
+                  <div class="conv-avatar">
+                    <span class="material-icons wa-icon">chat</span>
+                  </div>
+                  <div class="conv-body">
+                    <div class="conv-top">
+                      <span class="conv-name">{{ c.customerName || c.customerPhone }}</span>
+                      <span class="conv-time">{{ relativeTime(c.lastMessageAt || c.updatedAt) }}</span>
+                    </div>
+                    <div class="conv-route">
+                      @if (c.queueName || c.departmentName) {
+                        <span>{{ c.queueName || c.departmentName }}</span>
+                      }
+                      @if (c.assignedAgentName) {
+                        <span class="dot">·</span>
+                        <span>{{ c.assignedAgentName }}</span>
+                      }
+                    </div>
+                    <div class="conv-preview">{{ c.lastMessage || c.subject || 'No messages yet' }}</div>
+                    <div class="conv-meta">
+                      @if (isClosed(c.status)) {
+                        <span class="badge closed">Closed</span>
+                      }
+                      @if (c.botHandled && !isClosed(c.status)) {
+                        <span class="badge bot">Bot</span>
+                      }
+                      @if (c.slaBreached) {
+                        <span class="badge sla">SLA</span>
+                      }
+                      @if (c.priority !== 'NORMAL' && !isClosed(c.status)) {
+                        <span class="badge priority" [class]="priorityClass(c.priority)">{{ c.priority }}</span>
+                      }
+                    </div>
+                  </div>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <div class="bucket-tabs segment-tabs">
+        <button type="button" [class.active]="bucketFilter() === 'all'" (click)="setBucketFilter('all')">All</button>
+        <button type="button" [class.active]="bucketFilter() === 'active'" (click)="setBucketFilter('active')">Active</button>
+        <button type="button" [class.active]="bucketFilter() === 'queue'" (click)="setBucketFilter('queue')">Queue</button>
+      </div>
     </aside>
 
-    <!-- Message thread -->
+    <!-- Center: active conversation -->
     <section class="thread-pane">
       @if (!selectedId()) {
         <div class="empty-thread">
-          <span class="material-icons">inbox</span>
-          <p>Select a conversation to start</p>
+          <span class="material-icons">forum</span>
+          <p>Select a conversation to view messages</p>
         </div>
       } @else if (loadingThread()) {
-        <div class="empty-thread"><p>Loading...</p></div>
+        <div class="empty-thread"><p>Loading conversation...</p></div>
       } @else {
         <div class="thread-header">
-          <div>
+          <div class="thread-title">
+            <span class="eyebrow">Active conversation</span>
             <h2>{{ detail()?.customer?.name || detail()?.customerPhone }}</h2>
-            <span class="sub">{{ detail()?.customer?.phone }} · {{ detail()?.departmentName || 'Unassigned' }}</span>
+            <span class="sub">
+              @if (detail()?.assignedAgent?.name; as agent) {
+                Assigned to {{ agent }}
+              } @else if (detail()?.botHandled) {
+                Handled by HELIX Bot
+              } @else {
+                {{ detail()?.departmentName || 'Unassigned' }}
+              }
+            </span>
           </div>
           <div class="thread-actions">
             @if (detail()?.status !== 'RESOLVED' && detail()?.status !== 'CLOSED') {
-              <button type="button" class="btn secondary" (click)="openTransfer()">Transfer</button>
-              <button type="button" class="btn success" (click)="resolve()">Resolve</button>
-              <button type="button" class="btn warn" (click)="closeConversation()">Close</button>
+              <button type="button" class="btn-icon" title="Transfer" (click)="openTransfer()">
+                <span class="material-icons">swap_horiz</span>
+              </button>
+              <button type="button" class="btn-outline success" (click)="resolve()">Resolve</button>
+              <button type="button" class="btn-close" (click)="closeConversation()">Close chat</button>
+            } @else {
+              <span class="badge closed lg">Closed</span>
             }
           </div>
         </div>
 
         <div class="thread-body" #threadBody>
+          @for (evt of systemEvents(); track evt.id) {
+            <div class="system-msg">
+              <span class="material-icons">info_outline</span>
+              {{ evt.text }}
+              <small>{{ evt.at | date: 'shortTime' }}</small>
+            </div>
+          }
           @for (msg of messages(); track msg.id) {
             <div class="msg-row" [class.inbound]="isInbound(msg)" [class.outbound]="!isInbound(msg)">
+              @if (msg.senderType === 'BOT') {
+                <span class="bot-avatar material-icons">smart_toy</span>
+              }
               <div class="msg-bubble" [class.bot]="msg.senderType === 'BOT'">
-                <span class="msg-sender">{{ senderLabel(msg) }}</span>
+                @if (msg.senderType !== 'CUSTOMER') {
+                  <span class="msg-sender">{{ senderLabel(msg) }}</span>
+                }
                 @if (msg.contentType === 'IMAGE' && msg.attachments?.[0]; as att) {
                   <img [src]="att.url" [alt]="att.fileName" class="msg-media" />
                 } @else if (msg.attachments?.[0]; as att) {
@@ -132,157 +206,210 @@
         </div>
 
         @if (detail()?.status !== 'CLOSED') {
-          <div class="reply-box">
-            <label class="attach-btn" title="Attach file">
-              <span class="material-icons">attach_file</span>
-              <input type="file" hidden (change)="onFileSelected($event)" accept="image/*,audio/*,.pdf,.doc,.docx" />
-            </label>
-            <textarea
-              rows="2"
-              placeholder="Type your reply..."
-              [ngModel]="draft()"
-              (ngModelChange)="draft.set($event)"
-              (input)="onDraftInput()"
-              (keydown.enter)="$event.preventDefault(); sendReply()"
-            ></textarea>
-            <button type="button" class="btn primary" [disabled]="sending() || !draft().trim()" (click)="sendReply()">
-              Send
-            </button>
+          <div class="compose-box">
+            <div class="compose-tabs">
+              <button type="button" [class.active]="composeMode() === 'reply'" (click)="composeMode.set('reply')">Reply</button>
+              <button type="button" [class.active]="composeMode() === 'note'" (click)="composeMode.set('note')">Internal notes</button>
+            </div>
+            @if (composeMode() === 'reply') {
+              <div class="reply-box">
+                @if (showQuickReplies() && filteredQuickReplies().length) {
+                  <ul class="quick-replies-menu">
+                    @for (qr of filteredQuickReplies(); track qr.id) {
+                      <li>
+                        <button type="button" (click)="insertQuickReply(qr)">
+                          <strong>/{{ qr.shortcut }}</strong> — {{ qr.title }}
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+                <div class="compose-row">
+                  <label class="attach-btn" title="Attach file">
+                    <span class="material-icons">add</span>
+                    <input type="file" hidden (change)="onFileSelected($event)" accept="image/*,audio/*,.pdf,.doc,.docx" />
+                  </label>
+                  <textarea
+                    #draftInput
+                    rows="2"
+                    placeholder="Enter '/' to see quick replies..."
+                    [ngModel]="draft()"
+                    (ngModelChange)="onDraftChange($event)"
+                    (keydown.enter)="$event.preventDefault(); sendReply()"
+                  ></textarea>
+                  <button type="button" class="btn-send" [disabled]="sending() || !draft().trim()" (click)="sendReply()">
+                    <span class="material-icons">send</span>
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="note-form compose-note">
+                <textarea
+                  rows="3"
+                  placeholder="Add a private note visible only to your team..."
+                  [ngModel]="noteDraft()"
+                  (ngModelChange)="noteDraft.set($event)"
+                ></textarea>
+                <button type="button" class="btn primary" [disabled]="!noteDraft().trim()" (click)="addNote()">
+                  Add note
+                </button>
+              </div>
+            }
           </div>
         }
       }
     </section>
 
-    <!-- Customer profile -->
+    <!-- Right: Information / Smart plugs -->
     <aside class="profile-pane">
       @if (detail(); as d) {
-        <section class="profile-section">
-          <h3>Customer</h3>
-          <div class="profile-card">
-            <div class="profile-name">
-              {{ d.customer.name || 'Unknown' }}
-              @if (d.customer.isVip) {
-                <span class="vip-badge">VIP</span>
+        <div class="profile-header">
+          <div class="profile-identity">
+            <h3>{{ d.customer.name || d.customer.phone }}</h3>
+            <div class="channel-row">
+              <span class="material-icons wa-badge">whatsapp</span>
+              <span>{{ d.customer.phone }}</span>
+            </div>
+            @if (d.botHandled && !d.assignedAgent) {
+              <span class="bot-label">Live WA Bot</span>
+            }
+          </div>
+        </div>
+
+        <div class="profile-tabs">
+          <button type="button" [class.active]="profileTab() === 'information'" (click)="setProfileTab('information')">Information</button>
+          <button type="button" [class.active]="profileTab() === 'smartPlugs'" (click)="setProfileTab('smartPlugs')">Smart plugs</button>
+        </div>
+
+        @if (profileTab() === 'information') {
+          <div class="timer-cards">
+            <div class="timer-card">
+              <span class="label">Time since picked</span>
+              <strong>{{ pickedElapsed() }}</strong>
+            </div>
+            <div class="timer-card">
+              <span class="label">Total conversation time</span>
+              <strong>{{ totalElapsed() }}</strong>
+            </div>
+          </div>
+
+          @if (d.tags.length) {
+            <div class="tags-section">
+              <label>Conversation tags</label>
+              <div class="tags">
+                @for (tag of d.tags; track tag.id) {
+                  <span class="tag" [style.background]="tag.color">{{ tag.name }}</span>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="vars-section">
+            <div class="vars-head">
+              <span>Recipe variables</span>
+            </div>
+            <table class="vars-table">
+              @for (v of customerVariables(); track v.key) {
+                <tr>
+                  <td>{{ v.key }}</td>
+                  <td>{{ v.value }}</td>
+                </tr>
+              }
+            </table>
+          </div>
+
+          <div class="history-section">
+            <h4>Conversations till now: {{ customerHistory().length }}</h4>
+            @if (loadingHistory()) {
+              <p class="pane-hint">Loading...</p>
+            } @else {
+              @for (h of customerHistory(); track h.id) {
+                <button type="button" class="history-item" [class.active]="h.id === selectedId()" (click)="selectConversation(h.id)">
+                  <div class="history-date">{{ h.createdAt | date: 'MMM d, y · h:mm a' }}</div>
+                  <div class="history-meta">
+                    {{ h.closedBy || h.status }}
+                    @if (h.durationMinutes) { · {{ h.durationMinutes }}m }
+                  </div>
+                </button>
+              }
+            }
+          </div>
+
+          <div class="summary-section">
+            <div class="section-head">
+              <h4>AI Summary</h4>
+              <button type="button" class="link-btn" (click)="refreshSummary()">Regenerate</button>
+            </div>
+            <div class="summary-box">{{ formatSummary(d.aiSummary) }}</div>
+          </div>
+
+          @if (d.internalNotes.length) {
+            <div class="notes-section">
+              <h4>Internal notes</h4>
+              @for (note of d.internalNotes; track note.id) {
+                <div class="note-item">
+                  <div class="note-meta">{{ note.author.name }} · {{ note.createdAt | date: 'short' }}</div>
+                  <p>{{ note.content }}</p>
+                </div>
               }
             </div>
-            <div class="profile-field"><span>Phone</span>{{ d.customer.phone }}</div>
-            @if (d.customer.email) {
-              <div class="profile-field"><span>Email</span>{{ d.customer.email }}</div>
-            }
-            <div class="profile-field"><span>Language</span>{{ d.customer.language }}</div>
-          </div>
-        </section>
-
-        <section class="profile-section">
-          <h3>Bookings</h3>
-          @if (loadingBookings()) {
-            <p class="pane-hint">Loading bookings...</p>
-          } @else if (!bookings().length) {
-            <p class="pane-hint">No bookings on file</p>
-          } @else {
-            @for (booking of bookings(); track booking.id) {
-              <div class="booking-item">
-                <div class="booking-head">
-                  <span class="material-icons booking-icon">{{ bookingTypeIcon(booking.type) }}</span>
-                  <span class="booking-ref">{{ booking.reference }}</span>
-                  <span class="badge booking-status">{{ booking.status }}</span>
-                </div>
-                @if (booking.description) {
-                  <p class="booking-desc">{{ booking.description }}</p>
-                }
-                <div class="booking-dates">
-                  @if (booking.startDate) {
-                    <span>{{ booking.startDate | date: 'mediumDate' }}</span>
-                  }
-                  @if (booking.endDate) {
-                    <span>→ {{ booking.endDate | date: 'mediumDate' }}</span>
-                  }
-                </div>
-              </div>
-            }
           }
-        </section>
-
-        @if (d.salesforceCase; as sf) {
-          <section class="profile-section">
-            <h3>Salesforce Case</h3>
-            <div class="sf-card">
-              <div class="sf-row">
-                <span>Case #</span>
-                <strong>{{ sf.caseNumber || '—' }}</strong>
-              </div>
-              <div class="sf-row">
-                <span>Status</span>
-                <span class="badge status" [class]="statusClass(sf.status || '')">{{ sf.status || '—' }}</span>
-              </div>
-              <div class="sf-row">
-                <span>Priority</span>
-                {{ sf.priority || '—' }}
-              </div>
-              <div class="sf-row">
-                <span>Sync</span>
-                <span class="badge sync" [class]="sf.syncStatus.toLowerCase()">{{ sf.syncStatus }}</span>
+        } @else {
+          <!-- Smart plugs: CRM + bookings -->
+          @if (d.salesforceCase; as sf) {
+            <div class="plug-card">
+              <h4>Case feeds</h4>
+              <div class="plug-grid">
+                <div class="plug-field"><span>Case #</span><strong>{{ sf.caseNumber || '—' }}</strong></div>
+                <div class="plug-field"><span>Status</span><strong>{{ sf.status || '—' }}</strong></div>
+                <div class="plug-field"><span>Queue</span><strong>{{ d.queueName || '—' }}</strong></div>
+                <div class="plug-field"><span>Priority</span><strong>{{ sf.priority || '—' }}</strong></div>
               </div>
               @if (sf.subject) {
-                <p class="sf-subject">{{ sf.subject }}</p>
+                <p class="plug-desc">{{ sf.subject }}</p>
               }
               @if (sfCaseUrl(sf); as url) {
                 <a class="sf-link" [href]="url" target="_blank" rel="noopener">View in Salesforce ↗</a>
               }
             </div>
-          </section>
-        }
-
-        <section class="profile-section">
-          <div class="section-head">
-            <h3>AI Summary</h3>
-            <button type="button" class="link-btn" (click)="refreshSummary()">Regenerate</button>
-          </div>
-          <div class="summary-box">{{ formatSummary(d.aiSummary) }}</div>
-        </section>
-
-        <section class="profile-section">
-          <h3>Conversation</h3>
-          <div class="profile-field"><span>Status</span>{{ d.status }}</div>
-          <div class="profile-field"><span>Priority</span>{{ d.priority }}</div>
-          <div class="profile-field"><span>Queue</span>{{ d.queueName || '—' }}</div>
-          <div class="profile-field"><span>Agent</span>{{ d.assignedAgent?.name || 'Unassigned' }}</div>
-          @if (d.botHandled) {
-            <div class="profile-field"><span>Bot</span>Active</div>
           }
-          @if (d.tags.length) {
-            <div class="tags">
-              @for (tag of d.tags; track tag.id) {
-                <span class="tag" [style.background]="tag.color">{{ tag.name }}</span>
+
+          <div class="plug-card">
+            <h4>Bookings</h4>
+            @if (loadingBookings()) {
+              <p class="pane-hint">Loading...</p>
+            } @else if (!bookings().length) {
+              <p class="pane-hint">No bookings on file</p>
+            } @else {
+              @for (booking of bookings(); track booking.id) {
+                <div class="booking-item">
+                  <div class="booking-head">
+                    <span class="material-icons booking-icon">{{ bookingTypeIcon(booking.type) }}</span>
+                    <span class="booking-ref">{{ booking.reference }}</span>
+                    <span class="badge booking-status">{{ booking.status }}</span>
+                  </div>
+                  @if (booking.description) {
+                    <p class="booking-desc">{{ booking.description }}</p>
+                  }
+                </div>
               }
-            </div>
-          }
-        </section>
-
-        <section class="profile-section">
-          <h3>Internal Notes</h3>
-          <div class="note-form">
-            <textarea
-              rows="2"
-              placeholder="Add a private note..."
-              [ngModel]="noteDraft()"
-              (ngModelChange)="noteDraft.set($event)"
-            ></textarea>
-            <button type="button" class="btn secondary" [disabled]="!noteDraft().trim()" (click)="addNote()">
-              Add note
-            </button>
+            }
           </div>
-          @for (note of d.internalNotes; track note.id) {
-            <div class="note-item">
-              <div class="note-meta">{{ note.author.name }} · {{ note.createdAt | date: 'short' }}</div>
-              <p>{{ note.content }}</p>
+
+          <div class="plug-card">
+            <h4>Conversation</h4>
+            <div class="plug-grid">
+              <div class="plug-field"><span>Status</span><strong>{{ d.status }}</strong></div>
+              <div class="plug-field"><span>Department</span><strong>{{ d.departmentName || '—' }}</strong></div>
+              <div class="plug-field"><span>Agent</span><strong>{{ d.assignedAgent?.name || 'Unassigned' }}</strong></div>
             </div>
-          } @empty {
-            <p class="pane-hint">No internal notes yet</p>
-          }
-        </section>
+          </div>
+        }
       } @else {
-        <p class="pane-hint">Select a conversation</p>
+        <div class="empty-profile">
+          <span class="material-icons">person_outline</span>
+          <p>Customer details appear here</p>
+        </div>
       }
     </aside>
   </div>

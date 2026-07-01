@@ -1,7 +1,9 @@
-<div class="admin-page">
+<div class="admin-page" [class.settings-section]="hideTabs()">
   <header class="page-header">
-    <h1>Administration</h1>
-    <p>Manage departments, skills, queues, and agent availability</p>
+    <h1>{{ sectionTitle() }}</h1>
+    @if (!hideTabs()) {
+      <p>Users, templates, campaigns, WhatsApp numbers, audit logs, and branding</p>
+    }
   </header>
 
   @if (loading()) {
@@ -9,7 +11,58 @@
       <mat-spinner diameter="40"></mat-spinner>
     </div>
   } @else {
-    <mat-tab-group animationDuration="200ms" class="admin-tabs">
+    <mat-tab-group
+      animationDuration="200ms"
+      class="admin-tabs"
+      [class.single-section]="hideTabs()"
+      [selectedIndex]="selectedTabIndex()"
+    >
+      <mat-tab label="Users">
+        <div class="tab-content">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Roles</th>
+                <th>Capacity</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td><strong>{{ user.firstName }} {{ user.lastName }}</strong></td>
+                  <td>{{ user.email }}</td>
+                  <td><mat-chip>{{ user.status }}</mat-chip></td>
+                  <td>{{ user.roles.join(', ') }}</td>
+                  <td>{{ user.maxCapacity }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Roles">
+        <div class="tab-content">
+          <div class="card-grid">
+            @for (role of roles(); track role.id) {
+              <mat-card class="entity-card">
+                <mat-card-header>
+                  <mat-card-title>{{ role.name }}</mat-card-title>
+                  <mat-card-subtitle>{{ role.slug }}</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <p>{{ role.description }}</p>
+                  <small>{{ role.permissions.length }} permissions</small>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
       <mat-tab label="Departments">
         <div class="tab-content">
           <div class="card-grid">
@@ -25,28 +78,7 @@
                   <div class="entity-stats">
                     <span>{{ dept.agentCount ?? 0 }} agents</span>
                     <span>{{ dept.queueCount ?? 0 }} queues</span>
-                    <mat-chip [class.active]="dept.isActive" [class.inactive]="!dept.isActive">
-                      {{ dept.isActive ? 'Active' : 'Inactive' }}
-                    </mat-chip>
                   </div>
-                </mat-card-content>
-              </mat-card>
-            }
-          </div>
-        </div>
-      </mat-tab>
-
-      <mat-tab label="Skills">
-        <div class="tab-content">
-          <div class="card-grid">
-            @for (skill of skills(); track skill.id) {
-              <mat-card class="entity-card">
-                <mat-card-header>
-                  <mat-card-title>{{ skill.name }}</mat-card-title>
-                  <mat-card-subtitle>{{ skill.slug }}</mat-card-subtitle>
-                </mat-card-header>
-                <mat-card-content>
-                  <p>{{ skill.description }}</p>
                 </mat-card-content>
               </mat-card>
             }
@@ -64,25 +96,16 @@
                 <th>Strategy</th>
                 <th>Waiting</th>
                 <th>SLA (min)</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
               @for (queue of queues(); track queue.id) {
                 <tr>
-                  <td>
-                    <strong>{{ queue.name }}</strong>
-                    <small>{{ queue.slug }}</small>
-                  </td>
+                  <td><strong>{{ queue.name }}</strong></td>
                   <td>{{ queue.departmentName }}</td>
                   <td><mat-chip>{{ queue.routingStrategy }}</mat-chip></td>
                   <td>{{ queue.waitingCount ?? 0 }}</td>
                   <td>{{ queue.slaFirstResponse ?? '—' }} / {{ queue.slaResolution ?? '—' }}</td>
-                  <td>
-                    <mat-chip [class.active]="queue.isActive" [class.inactive]="!queue.isActive">
-                      {{ queue.isActive ? 'Active' : 'Inactive' }}
-                    </mat-chip>
-                  </td>
                 </tr>
               }
             </tbody>
@@ -90,7 +113,151 @@
         </div>
       </mat-tab>
 
-      <mat-tab label="Agent Availability">
+      <mat-tab label="Templates">
+        <div class="tab-content">
+          <div class="form-card">
+            <h3>Create template</h3>
+            <div class="form-row">
+              <input placeholder="Name" [ngModel]="newTemplateName()" (ngModelChange)="newTemplateName.set($event)" />
+              <input placeholder="Slug" [ngModel]="newTemplateSlug()" (ngModelChange)="newTemplateSlug.set($event)" />
+            </div>
+            <textarea rows="3" placeholder="Body (use {{1}} for variables)" [ngModel]="newTemplateBody()" (ngModelChange)="newTemplateBody.set($event)"></textarea>
+            <button type="button" class="btn primary" (click)="createTemplate()">Create</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Category</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of templates(); track t.id) {
+                <tr>
+                  <td><strong>{{ t.name }}</strong></td>
+                  <td>{{ t.slug }}</td>
+                  <td>{{ t.category }}</td>
+                  <td><span class="status-badge" [style.background]="statusColor(t.status)">{{ t.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Campaigns">
+        <div class="tab-content">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Template</th>
+                <th>Status</th>
+                <th>Recipients</th>
+                <th>Sent / Failed</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of campaigns(); track c.id) {
+                <tr>
+                  <td><strong>{{ c.name }}</strong></td>
+                  <td>{{ c.templateName ?? '—' }}</td>
+                  <td><span class="status-badge" [style.background]="statusColor(c.status)">{{ c.status }}</span></td>
+                  <td>{{ c.totalRecipients }}</td>
+                  <td>{{ c.sentCount }} / {{ c.failedCount }}</td>
+                  <td>
+                    @if (c.status === 'DRAFT' || c.status === 'SCHEDULED') {
+                      <button type="button" class="btn secondary" [disabled]="startingCampaign() === c.id" (click)="startCampaign(c.id)">
+                        {{ startingCampaign() === c.id ? 'Starting...' : 'Start' }}
+                      </button>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="hint">No campaigns yet — seed or create via API</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="WhatsApp">
+        <div class="tab-content">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Number</th>
+                <th>Display Name</th>
+                <th>Business</th>
+                <th>Default</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (n of whatsappNumbers(); track n.id) {
+                <tr>
+                  <td><strong>{{ n.phoneNumber }}</strong></td>
+                  <td>{{ n.displayName }}</td>
+                  <td>{{ n.businessName ?? '—' }}</td>
+                  <td>{{ n.isDefault ? 'Yes' : '—' }}</td>
+                  <td><mat-chip [class.active]="n.isActive">{{ n.isActive ? 'Active' : 'Inactive' }}</mat-chip></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Audit Log">
+        <div class="tab-content">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of auditLogs(); track log.id) {
+                <tr>
+                  <td>{{ log.createdAt | date: 'short' }}</td>
+                  <td>{{ log.userName ?? 'System' }}</td>
+                  <td><mat-chip>{{ log.action }}</mat-chip></td>
+                  <td>{{ log.entityType }}</td>
+                  <td class="details-cell">{{ log.newValues | json }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="hint">No audit entries</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="White Label">
+        <div class="tab-content">
+          @if (whiteLabel(); as wl) {
+            <div class="form-card brand-form">
+              <label>App name <input [ngModel]="wl.appName" (ngModelChange)="whiteLabel.set({ ...wl, appName: $event })" /></label>
+              <label>Tagline <input [ngModel]="wl.tagline ?? ''" (ngModelChange)="whiteLabel.set({ ...wl, tagline: $event })" /></label>
+              <label>Support email <input [ngModel]="wl.supportEmail ?? ''" (ngModelChange)="whiteLabel.set({ ...wl, supportEmail: $event })" /></label>
+              <label>Logo URL <input [ngModel]="wl.logoUrl ?? ''" (ngModelChange)="whiteLabel.set({ ...wl, logoUrl: $event })" /></label>
+              <label>Primary color <input type="color" [ngModel]="wl.primaryColor" (ngModelChange)="whiteLabel.set({ ...wl, primaryColor: $event })" /></label>
+              <button type="button" class="btn primary" [disabled]="savingBrand()" (click)="saveWhiteLabel()">
+                {{ savingBrand() ? 'Saving...' : 'Save branding' }}
+              </button>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Agents">
         <div class="tab-content">
           <div class="summary-bar">
             @for (status of ['ONLINE', 'BUSY', 'ON_BREAK', 'AWAY', 'OFFLINE']; track status) {
@@ -101,7 +268,6 @@
               </div>
             }
           </div>
-
           <table class="data-table">
             <thead>
               <tr>
@@ -109,7 +275,6 @@
                 <th>Department</th>
                 <th>Status</th>
                 <th>Active / Capacity</th>
-                <th>Since</th>
               </tr>
             </thead>
             <tbody>
@@ -117,16 +282,8 @@
                 <tr>
                   <td><strong>{{ agent.userName }}</strong></td>
                   <td>{{ agent.departmentName ?? '—' }}</td>
-                  <td>
-                    <span class="status-badge" [style.background]="statusColor(agent.status)">
-                      {{ agent.status }}
-                    </span>
-                    @if (agent.reason) {
-                      <small>{{ agent.reason }}</small>
-                    }
-                  </td>
+                  <td><span class="status-badge" [style.background]="statusColor(agent.status)">{{ agent.status }}</span></td>
                   <td>{{ agent.activeConversations ?? 0 }} / {{ agent.maxCapacity ?? 5 }}</td>
-                  <td>{{ agent.since | date: 'short' }}</td>
                 </tr>
               }
             </tbody>

@@ -3,9 +3,10 @@ import { SimulatorController } from './simulator.controller';
 import { SimulatorService } from './simulator.service';
 import { BotModule } from '../bot/bot.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { CsatModule } from '../csat/csat.module';
 
 @Module({
-  imports: [BotModule, IntegrationsModule],
+  imports: [BotModule, IntegrationsModule, CsatModule],
   controllers: [SimulatorController],
   providers: [SimulatorService],
   exports: [SimulatorService],

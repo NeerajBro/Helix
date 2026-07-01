@@ -25,6 +25,8 @@ export interface ConversationFilters {
   priority?: ConversationPriority;
   assignedAgentId?: string;
   departmentId?: string;
+  botHandled?: boolean;
+  inboxView?: 'all' | 'active' | 'queue' | 'waitingOnAgent' | 'waitingOnCustomer';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +42,8 @@ export class ConversationsService {
     if (filters.priority) params.set('priority', filters.priority);
     if (filters.assignedAgentId) params.set('assignedAgentId', filters.assignedAgentId);
     if (filters.departmentId) params.set('departmentId', filters.departmentId);
+    if (filters.botHandled !== undefined) params.set('botHandled', String(filters.botHandled));
+    if (filters.inboxView && filters.inboxView !== 'all') params.set('inboxView', filters.inboxView);
     const qs = params.toString();
     return this.http
       .get<ApiWrapper<PaginatedResponse<ConversationSummary>>>(

@@ -1,0 +1,262 @@
+.reports-page {
+  padding: 24px 32px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a2332;
+  }
+
+  p {
+    margin: 0;
+    color: #607d8b;
+    font-size: 14px;
+  }
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-tabs {
+  display: flex;
+  gap: 4px;
+
+  .tab {
+    padding: 6px 12px;
+    border: 1px solid #dfe6ee;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+
+    &.active {
+      background: #1565c0;
+      color: #fff;
+      border-color: #1565c0;
+    }
+  }
+}
+
+.custom-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+
+  input[type='date'] {
+    padding: 6px 8px;
+    border: 1px solid #dfe6ee;
+    border-radius: 6px;
+  }
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+
+  &.primary {
+    background: #1565c0;
+    color: #fff;
+  }
+
+  &.secondary {
+    background: #eceff1;
+    color: #37474f;
+  }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: #fff;
+  border-radius: var(--helix-border-radius);
+  padding: 16px;
+  box-shadow: var(--helix-card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  color: #90a4ae;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a2332;
+
+  &.success { color: #2e7d32; }
+  &.danger { color: #c62828; }
+}
+
+.module-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .module-tab {
+    padding: 8px 16px;
+    border: 1px solid #dfe6ee;
+    border-radius: 999px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    color: #546e7a;
+
+    &.active {
+      background: #1565c0;
+      border-color: #1565c0;
+      color: #fff;
+      font-weight: 500;
+    }
+  }
+}
+
+.report-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .tab {
+    padding: 8px 16px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: #607d8b;
+
+    &.active {
+      color: #1565c0;
+      border-bottom-color: #1565c0;
+      font-weight: 600;
+    }
+  }
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-card,
+.table-card {
+  background: #fff;
+  border-radius: var(--helix-border-radius);
+  padding: 20px;
+  box-shadow: var(--helix-card-shadow);
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #37474f;
+  }
+
+  h4 {
+    margin: 16px 0 8px;
+    font-size: 13px;
+    color: #607d8b;
+  }
+}
+
+.table-card {
+  overflow-x: auto;
+  margin-bottom: 16px;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th,
+    td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eef2f6;
+    }
+
+    th {
+      color: #78909c;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    td.danger {
+      color: #c62828;
+      font-weight: 600;
+    }
+  }
+}
+
+.metric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #546e7a;
+
+    strong {
+      color: #1a2332;
+
+      &.danger {
+        color: #c62828;
+      }
+    }
+  }
+}
+
+.agent-csat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.hint {
+  color: #90a4ae;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}

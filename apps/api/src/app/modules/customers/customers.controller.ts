@@ -34,6 +34,13 @@ export class CustomersController {
     return this.customersService.findOne(id);
   }
 
+  @Get(':id/conversations')
+  @RequirePermissions('conversations:read')
+  @ApiOperation({ summary: 'List customer conversation history' })
+  getConversations(@Param('id', ParseUUIDPipe) id: string) {
+    return this.customersService.getConversations(id);
+  }
+
   @Get(':id/timeline')
   @RequirePermissions('conversations:read')
   @ApiOperation({ summary: 'Get customer activity timeline' })

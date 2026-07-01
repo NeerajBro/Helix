@@ -1,0 +1,50 @@
+<div class="whatsapp-page">
+  <header class="page-header">
+    <div>
+      <h1>WhatsApp</h1>
+      <p>WABA number health, quality rating, and messaging tier</p>
+    </div>
+    <a class="btn secondary" routerLink="/settings/whatsapp">Manage numbers</a>
+  </header>
+
+  @if (loading()) {
+    <p class="hint">Loading WhatsApp numbers...</p>
+  } @else {
+    <div class="numbers-grid">
+      @for (n of numbers(); track n.id) {
+        <div class="number-card">
+          <div class="number-header">
+            <span class="wa-icon material-icons">chat</span>
+            <div>
+              <h3>{{ n.displayName }}</h3>
+              <p>{{ n.phoneNumber }}</p>
+            </div>
+            @if (n.isDefault) {
+              <span class="default-badge">Default</span>
+            }
+          </div>
+          <div class="number-meta">
+            <div class="meta-item">
+              <span class="meta-label">Business</span>
+              <span>{{ n.businessName ?? '—' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Quality rating</span>
+              <span class="quality" [style.color]="qualityColor(n)">{{ qualityLabel(n) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Messaging tier</span>
+              <span>{{ tierLabel(n) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Status</span>
+              <span [class.active]="n.isActive">{{ n.isActive ? 'Connected' : 'Disconnected' }}</span>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <p class="hint">No WhatsApp numbers configured. Add one in Settings.</p>
+      }
+    </div>
+  }
+</div>

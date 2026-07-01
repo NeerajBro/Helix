@@ -1,0 +1,54 @@
+<div class="contacts-page">
+  <header class="page-header">
+    <div>
+      <h1>Contacts</h1>
+      <p>{{ total() }} customers across all channels</p>
+    </div>
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="search"
+        placeholder="Search by name, phone, or email"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        (keyup.enter)="onSearch()"
+      />
+      <button type="button" class="btn primary" (click)="onSearch()">Search</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="hint">Loading contacts...</p>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Language</th>
+            <th>Conversations</th>
+            <th>Last contact</th>
+            <th>VIP</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of contacts(); track c.id) {
+            <tr>
+              <td><strong>{{ c.name ?? 'Unknown' }}</strong></td>
+              <td>{{ c.phone }}</td>
+              <td>{{ c.email ?? '—' }}</td>
+              <td>{{ c.language }}</td>
+              <td>{{ c.conversationCount ?? 0 }}</td>
+              <td>{{ c.lastContactedAt ? (c.lastContactedAt | date: 'medium') : '—' }}</td>
+              <td>@if (c.isVip) { <span class="vip-badge">VIP</span> }</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="hint">No contacts found</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

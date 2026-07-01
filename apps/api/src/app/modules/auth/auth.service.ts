@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { AuditService } from '../../infrastructure/audit/audit.service';
 import { LoginDto } from './dto/login.dto';
 import { AuthTokens, AuthUser, JwtPayload } from '@helix/types';
 
@@ -15,6 +16,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly audit: AuditService,
   ) {}
 
   async login(dto: LoginDto): Promise<{ user: AuthUser; tokens: AuthTokens }> {
@@ -64,6 +66,13 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
+    });
+
+    void this.audit.log({
+      userId: user.id,
+      action: 'LOGIN',
+      entityType: 'user',
+      entityId: user.id,
     });
 
     return {

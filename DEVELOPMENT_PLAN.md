@@ -170,11 +170,11 @@ Enterprise-grade phased delivery plan. Each phase is fully completed before movi
 
 | Deliverable | Status |
 |-------------|--------|
-| Reports API (department, agent, conversation, bot) | ⬜ |
-| SLA tracking & breach alerts | ⬜ |
-| CSAT survey flow | ⬜ |
-| CSV/Excel export | ⬜ |
-| Reports UI with date filters | ⬜ |
+| Reports API (department, agent, conversation, bot) | ✅ |
+| SLA tracking & breach alerts | ✅ |
+| CSAT survey flow | ✅ |
+| CSV/Excel export | ✅ |
+| Reports UI with date filters | ✅ |
 
 ---
 
@@ -184,12 +184,12 @@ Enterprise-grade phased delivery plan. Each phase is fully completed before movi
 
 | Deliverable | Status |
 |-------------|--------|
-| Admin UI (users, roles, departments, settings) | ⬜ |
-| Template management | ⬜ |
-| Campaign engine (BullMQ) | ⬜ |
-| WhatsApp number management | ⬜ |
-| Audit log viewer | ⬜ |
-| White-label settings | ⬜ |
+| Admin UI (users, roles, departments, settings) | ✅ |
+| Template management | ✅ |
+| Campaign engine (BullMQ) | ✅ |
+| WhatsApp number management | ✅ |
+| Audit log viewer | ✅ |
+| White-label settings | ✅ |
 
 ---
 

@@ -9,6 +9,7 @@ export interface SimulatorCustomerSummary {
   whatsappExpiresAt?: string;
   windowOpen: boolean;
   unreadCount: number;
+  csatPending?: boolean;
 }
 
 export interface SimulatorConversationState {

@@ -107,6 +107,19 @@
           }
         </div>
 
+        @if (customerState()?.csatPending) {
+          <div class="csat-prompt">
+            <p>Rate your support experience</p>
+            <div class="csat-stars">
+              @for (star of [1, 2, 3, 4, 5]; track star) {
+                <button type="button" class="star-btn" [disabled]="sending()" (click)="submitCsat(star)">
+                  {{ star }} ★
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         <div class="wa-input">
           <label class="attach-btn" title="Attach file">
             <span class="material-icons">attach_file</span>

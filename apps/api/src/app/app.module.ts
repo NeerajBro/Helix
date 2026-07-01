@@ -26,6 +26,18 @@ import { SalesforceAdapterModule } from './adapters/salesforce/salesforce.module
 import { BookingAdapterModule } from './adapters/booking/booking.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { CsatModule } from './modules/csat/csat.module';
+import { SlaModule } from './modules/sla/sla.module';
+import { AuditModule } from './infrastructure/audit/audit.module';
+import { QueueModule } from './infrastructure/queue/queue.module';
+import { AuditLogsModule } from './modules/audit/audit.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { TemplatesModule } from './modules/templates/templates.module';
+import { WhatsAppNumbersModule } from './modules/whatsapp-numbers/whatsapp-numbers.module';
+import { CampaignsModule } from './modules/campaigns/campaigns.module';
+import { QuickRepliesModule } from './modules/quick-replies/quick-replies.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { JwtAuthGuard } from './core/guards/jwt-auth.guard';
 import { PermissionsGuard } from './core/guards/permissions.guard';
 import {
@@ -44,6 +56,8 @@ import {
       envFilePath: ['.env', '../../.env'],
     }),
     PrismaModule,
+    AuditModule,
+    QueueModule,
     StorageModule,
     SocketModule,
     WhatsAppAdapterModule,
@@ -53,6 +67,16 @@ import {
     BookingAdapterModule,
     IntegrationsModule,
     BookingsModule,
+    ReportsModule,
+    CsatModule,
+    SlaModule,
+    AuditLogsModule,
+    SettingsModule,
+    TemplatesModule,
+    WhatsAppNumbersModule,
+    CampaignsModule,
+    QuickRepliesModule,
+    NotificationsModule,
     AuthModule,
     UsersModule,
     RolesModule,

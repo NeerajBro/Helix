@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
 import {
   ConversationsService,
   ConversationFilters,
@@ -19,9 +19,13 @@ import { SocketService } from '../../core/services/socket.service';
 import { OrganizationService } from '../../core/services/organization.service';
 import { AuthService } from '../../core/services/auth.service';
 import { BookingsService } from '../../core/services/bookings.service';
+import { QuickRepliesService } from '../../core/services/quick-replies.service';
+import { CustomersService } from '../../core/services/customers.service';
 import {
+  CannedResponseDto,
   ConversationDetail,
   ConversationSummary,
+  CustomerConversationHistoryItem,
   DepartmentDto,
   InboxMessage,
   QueueDto,
@@ -29,6 +33,12 @@ import {
   SalesforceCaseDto,
 } from '@helix/types';
 import { ConversationStatus } from '@helix/types';
+
+type SourceFilter = 'all' | 'agent' | 'bot';
+type BucketFilter = 'all' | 'active' | 'queue';
+type WaitingFilter = '' | 'waitingOnAgent' | 'waitingOnCustomer';
+type ComposeMode = 'reply' | 'note';
+type ProfileTab = 'information' | 'smartPlugs';
 
 const STATUS_FILTERS: { label: string; value: ConversationStatus | '' }[] = [
   { label: 'All', value: '' },
@@ -51,8 +61,11 @@ export class InboxComponent implements OnInit, OnDestroy {
   private readonly orgService = inject(OrganizationService);
   private readonly authService = inject(AuthService);
   private readonly bookingsService = inject(BookingsService);
+  private readonly quickRepliesService = inject(QuickRepliesService);
+  private readonly customersService = inject(CustomersService);
 
   @ViewChild('threadBody') threadBody?: ElementRef<HTMLDivElement>;
+  @ViewChild('draftInput') draftInput?: ElementRef<HTMLTextAreaElement>;
 
   protected readonly statusFilters = STATUS_FILTERS;
   protected readonly conversations = signal<ConversationSummary[]>([]);
@@ -71,16 +84,79 @@ export class InboxComponent implements OnInit, OnDestroy {
   protected readonly search = signal('');
   protected readonly statusFilter = signal<ConversationStatus | ''>('');
   protected readonly mineOnly = signal(false);
+  protected readonly sourceFilter = signal<SourceFilter>('all');
+  protected readonly bucketFilter = signal<BucketFilter>('all');
+  protected readonly waitingFilter = signal<WaitingFilter>('');
   protected readonly draft = signal('');
   protected readonly noteDraft = signal('');
+  protected readonly composeMode = signal<ComposeMode>('reply');
+  protected readonly profileTab = signal<ProfileTab>('information');
+  protected readonly showAdvancedFilters = signal(false);
+
+  protected readonly quickReplies = signal<CannedResponseDto[]>([]);
+  protected readonly showQuickReplies = signal(false);
+  protected readonly quickReplyQuery = signal('');
 
   protected readonly bookings = signal<BookingDto[]>([]);
   protected readonly loadingBookings = signal(false);
+  protected readonly customerHistory = signal<CustomerConversationHistoryItem[]>([]);
+  protected readonly loadingHistory = signal(false);
+  protected readonly newChatCount = signal(0);
 
   protected readonly showTransfer = signal(false);
   protected readonly transferDeptId = signal('');
   protected readonly transferQueueId = signal('');
   protected readonly transferReason = signal('');
+
+  protected readonly now = signal(Date.now());
+
+  protected readonly filteredQuickReplies = computed(() => {
+    const q = this.quickReplyQuery().toLowerCase();
+    return this.quickReplies().filter(
+      (r) => !q || r.shortcut.includes(q) || r.title.toLowerCase().includes(q),
+    );
+  });
+
+  protected readonly pickedElapsed = computed(() => {
+    const d = this.detail();
+    this.now();
+    if (!d) return '';
+    const pickedAt = d.botTransferredAt ?? d.assignments[0]?.createdAt ?? d.createdAt;
+    return this.formatDuration(Date.now() - new Date(pickedAt).getTime());
+  });
+
+  protected readonly totalElapsed = computed(() => {
+    const d = this.detail();
+    this.now();
+    if (!d) return '';
+    return this.formatDuration(Date.now() - new Date(d.createdAt).getTime());
+  });
+
+  protected readonly customerVariables = computed(() => {
+    const d = this.detail();
+    if (!d) return [];
+    return [
+      { key: 'name', value: d.customer.name || '—' },
+      { key: 'phone', value: d.customer.phone },
+      { key: 'sys_language', value: d.customer.language },
+      { key: 'email', value: d.customer.email || '—' },
+      { key: 'accountId', value: d.customer.id.slice(0, 8) },
+      { key: 'department', value: d.departmentName || '—' },
+      { key: 'queue', value: d.queueName || '—' },
+    ];
+  });
+
+  protected readonly systemEvents = computed(() => {
+    const d = this.detail();
+    if (!d) return [];
+    return d.assignments.map((a) => ({
+      id: a.id,
+      text: a.isAuto
+        ? `Room transferred — assigned to ${a.agentName}${a.reason ? ` (${a.reason})` : ''}`
+        : `${a.agentName} joined the conversation`,
+      at: a.createdAt,
+    }));
+  });
 
   protected readonly selectedConversation = computed(() => {
     const id = this.selectedId();
@@ -93,8 +169,10 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDepartments();
+    this.loadQuickReplies();
     this.loadConversations();
     this.setupSocketListeners();
+    this.subs.push(interval(30_000).subscribe(() => this.now.set(Date.now())));
   }
 
   ngOnDestroy(): void {
@@ -106,12 +184,22 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   protected loadConversations(): void {
     this.loadingList.set(true);
+    this.newChatCount.set(0);
+    const waiting = this.waitingFilter();
+    const bucket = this.bucketFilter();
+    const source = this.sourceFilter();
+
     const filters: ConversationFilters = {
       pageSize: 50,
       search: this.search() || undefined,
       status: this.statusFilter() || undefined,
       assignedAgentId: this.mineOnly() ? this.authService.user()?.id : undefined,
+      botHandled: source === 'bot' ? true : source === 'agent' ? false : undefined,
+      inboxView:
+        waiting ||
+        (bucket !== 'all' ? bucket : undefined),
     };
+
     this.conversationsService.list(filters).subscribe({
       next: (res) => {
         this.conversations.set(res.items);
@@ -122,6 +210,28 @@ export class InboxComponent implements OnInit, OnDestroy {
       },
       error: () => this.loadingList.set(false),
     });
+  }
+
+  protected loadNewChats(): void {
+    this.newChatCount.set(0);
+    this.loadConversations();
+  }
+
+  protected setSourceFilter(filter: SourceFilter): void {
+    this.sourceFilter.set(filter);
+    this.loadConversations();
+  }
+
+  protected setBucketFilter(filter: BucketFilter): void {
+    this.bucketFilter.set(filter);
+    this.waitingFilter.set('');
+    this.loadConversations();
+  }
+
+  protected setWaitingFilter(filter: WaitingFilter): void {
+    this.waitingFilter.set(filter);
+    this.bucketFilter.set('all');
+    this.loadConversations();
   }
 
   protected selectConversation(id: string): void {
@@ -135,12 +245,14 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.detail.set(null);
     this.messages.set([]);
     this.bookings.set([]);
+    this.customerHistory.set([]);
 
     this.conversationsService.get(id).subscribe({
       next: (d) => {
         this.detail.set(d);
         this.loadingThread.set(false);
         this.loadBookings(d.customer.id);
+        this.loadCustomerHistory(d.customer.id);
       },
       error: () => this.loadingThread.set(false),
     });
@@ -160,6 +272,7 @@ export class InboxComponent implements OnInit, OnDestroy {
 
     this.sending.set(true);
     this.draft.set('');
+    this.showQuickReplies.set(false);
     this.conversationsService.sendMessage(id, text).subscribe({
       next: (msg) => {
         this.messages.update((list) => [...list, msg]);
@@ -198,6 +311,26 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.socketService.emitTypingStart(id);
     if (this.typingTimeout) clearTimeout(this.typingTimeout);
     this.typingTimeout = setTimeout(() => this.socketService.emitTypingStop(id), 1200);
+  }
+
+  protected onDraftChange(value: string): void {
+    this.draft.set(value);
+    this.onDraftInput();
+
+    if (value.startsWith('/')) {
+      this.quickReplyQuery.set(value.slice(1).toLowerCase());
+      this.showQuickReplies.set(true);
+    } else {
+      this.showQuickReplies.set(false);
+      this.quickReplyQuery.set('');
+    }
+  }
+
+  protected insertQuickReply(reply: CannedResponseDto): void {
+    this.draft.set(reply.content);
+    this.showQuickReplies.set(false);
+    this.quickReplyQuery.set('');
+    this.draftInput?.nativeElement.focus();
   }
 
   protected resolve(): void {
@@ -258,6 +391,14 @@ export class InboxComponent implements OnInit, OnDestroy {
     });
   }
 
+  protected submitCompose(): void {
+    if (this.composeMode() === 'note') {
+      this.addNote();
+    } else {
+      this.sendReply();
+    }
+  }
+
   protected refreshSummary(): void {
     const id = this.selectedId();
     if (!id) return;
@@ -308,6 +449,39 @@ export class InboxComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected formatDuration(ms: number): string {
+    const mins = Math.floor(ms / 60000);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    const rem = mins % 60;
+    return rem ? `${hrs}h ${rem}m` : `${hrs}h`;
+  }
+
+  protected relativeTime(iso?: string): string {
+    if (!iso) return '';
+    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return 'less than a minute';
+    if (mins === 1) return '1 minute';
+    if (mins < 60) return `${mins} minutes`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''}`;
+    return new Date(iso).toLocaleDateString();
+  }
+
+  protected isClosed(status: string): boolean {
+    return status === 'CLOSED' || status === 'RESOLVED';
+  }
+
+  protected setProfileTab(tab: ProfileTab): void {
+    this.profileTab.set(tab);
+  }
+
+  private loadQuickReplies(): void {
+    this.quickRepliesService.list().subscribe({
+      next: (items) => this.quickReplies.set(items),
+    });
+  }
+
   private loadBookings(customerId: string): void {
     this.loadingBookings.set(true);
     this.bookingsService.getByCustomer(customerId).subscribe({
@@ -316,6 +490,17 @@ export class InboxComponent implements OnInit, OnDestroy {
         this.loadingBookings.set(false);
       },
       error: () => this.loadingBookings.set(false),
+    });
+  }
+
+  private loadCustomerHistory(customerId: string): void {
+    this.loadingHistory.set(true);
+    this.customersService.getConversationHistory(customerId).subscribe({
+      next: (items) => {
+        this.customerHistory.set(items);
+        this.loadingHistory.set(false);
+      },
+      error: () => this.loadingHistory.set(false),
     });
   }
 
@@ -355,6 +540,9 @@ export class InboxComponent implements OnInit, OnDestroy {
           this.customerTyping.set(false);
         }
       }),
+      this.socketService.onConversationCreated().subscribe(() => {
+        this.newChatCount.update((n) => n + 1);
+      }),
       this.socketService.onConversationUpdated().subscribe((p) => {
         if ('conversation' in p && p.conversation) {
           this.handleConversationEvent(p.conversation);
@@ -370,9 +558,13 @@ export class InboxComponent implements OnInit, OnDestroy {
   }
 
   private handleConversationEvent(conversation: ConversationDetail): void {
-    this.conversations.update((list) =>
-      list.map((c) => (c.id === conversation.id ? { ...c, ...this.toSummary(conversation) } : c)),
-    );
+    this.conversations.update((list) => {
+      const exists = list.some((c) => c.id === conversation.id);
+      if (!exists) {
+        return [this.toSummary(conversation) as ConversationSummary, ...list];
+      }
+      return list.map((c) => (c.id === conversation.id ? { ...c, ...this.toSummary(conversation) } : c));
+    });
     if (conversation.id === this.selectedId()) {
       this.detail.set(conversation);
     }

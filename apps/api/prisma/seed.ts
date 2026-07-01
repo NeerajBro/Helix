@@ -3,6 +3,8 @@ import * as bcrypt from 'bcrypt';
 import { PERMISSION_MODULES, DEPARTMENT_SLUGS, ROLE_SLUGS, SKILL_SLUGS } from '@helix/shared';
 import { seedPhase4 } from './seed-phase4';
 import { seedPhase10 } from './seed-phase10';
+import { seedPhase11 } from './seed-phase11';
+import { seedPhase12 } from './seed-phase12';
 
 const prisma = new PrismaClient();
 
@@ -287,6 +289,48 @@ async function main(): Promise<void> {
     { key: 'sla.resolution_minutes', value: 240, description: 'SLA resolution target (minutes)' },
     { key: 'bot.enabled', value: true, description: 'AI bot enabled' },
     { key: 'whatsapp.session_window_hours', value: 24, description: 'WhatsApp 24h session window' },
+    {
+      key: 'agent.canned_responses',
+      value: [
+        {
+          id: '00000000-0000-4000-8000-000000000001',
+          title: 'Greeting',
+          shortcut: 'hello',
+          content: 'Hello! Thank you for contacting us. How can I help you today?',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '00000000-0000-4000-8000-000000000002',
+          title: 'Please wait',
+          shortcut: 'wait',
+          content: 'Thank you for your patience. I am looking into this for you and will be back shortly.',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '00000000-0000-4000-8000-000000000003',
+          title: 'Booking reference',
+          shortcut: 'booking',
+          content: 'Could you please share your booking reference number so I can pull up your reservation?',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '00000000-0000-4000-8000-000000000004',
+          title: 'Closing',
+          shortcut: 'thanks',
+          content: 'Thank you for reaching out. Is there anything else I can help you with today?',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+      description: 'Agent quick replies for inbox slash commands',
+    },
   ];
 
   for (const setting of settings) {
@@ -314,6 +358,8 @@ async function main(): Promise<void> {
 
   await seedPhase4(prisma);
   await seedPhase10(prisma);
+  await seedPhase11(prisma);
+  await seedPhase12(prisma);
 
   console.log('✅ Seed complete!');
 }

@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { SOCKET_EVENTS } from '@helix/shared';
-import { DashboardStats, MessageDto, ConversationDetail } from '@helix/types';
+import { DashboardStats, MessageDto, ConversationDetail, NotificationDto } from '@helix/types';
 import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
 
@@ -110,6 +110,23 @@ export class SocketService implements OnDestroy {
 
   onAgentStatusChanged(): Observable<TypingEvent & { status: string }> {
     return this.listen(SOCKET_EVENTS.AGENT_STATUS_CHANGED);
+  }
+
+  onSlaBreach(): Observable<{
+    conversationId: string;
+    customerPhone: string;
+    breachType: string;
+    minutesOverdue: number;
+  }> {
+    return this.listen(SOCKET_EVENTS.SLA_BREACH);
+  }
+
+  onConversationCreated(): Observable<{ conversation: ConversationDetail }> {
+    return this.listen(SOCKET_EVENTS.CONVERSATION_CREATED);
+  }
+
+  onNotificationNew(): Observable<NotificationDto> {
+    return this.listen(SOCKET_EVENTS.NOTIFICATION_NEW);
   }
 
   emitTypingStart(conversationId: string): void {

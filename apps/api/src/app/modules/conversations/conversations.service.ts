@@ -15,6 +15,7 @@ import {
   CreateConversationDto,
   CreateInternalNoteDto,
   CreateTagDto,
+  InboxView,
   TransferConversationDto,
   UpdateConversationDto,
 } from './dto/conversation.dto';
@@ -35,6 +36,8 @@ import {
   WhatsAppAdapter,
 } from '../../adapters/whatsapp/whatsapp.adapter';
 import { SalesforceSyncService } from '../integrations/salesforce-sync.service';
+import { CsatService } from '../csat/csat.service';
+import { SlaService } from '../sla/sla.service';
 
 @Injectable()
 export class ConversationsService {
@@ -44,18 +47,24 @@ export class ConversationsService {
     private readonly realtime: RealtimeService,
     @Inject(WHATSAPP_ADAPTER) private readonly whatsapp: WhatsAppAdapter,
     private readonly salesforceSync: SalesforceSyncService,
+    private readonly csatService: CsatService,
+    private readonly slaService: SlaService,
   ) {}
 
-  async findAll(query: ConversationQueryDto) {
+  async findAll(query: ConversationQueryDto, currentUserId?: string) {
     const { skip, take, page, pageSize } = parsePagination(query);
+
+    const viewWhere = this.buildInboxViewWhere(query.inboxView, currentUserId);
     const where = {
       deletedAt: null,
+      ...viewWhere,
       ...(query.status && { status: query.status }),
       ...(query.priority && { priority: query.priority }),
       ...(query.assignedAgentId && { assignedAgentId: query.assignedAgentId }),
       ...(query.departmentId && { departmentId: query.departmentId }),
       ...(query.queueId && { queueId: query.queueId }),
       ...(query.customerId && { customerId: query.customerId }),
+      ...(query.botHandled !== undefined && { botHandled: query.botHandled }),
       ...(query.search && {
         customer: {
           OR: [
@@ -297,6 +306,7 @@ export class ConversationsService {
       result.assignedAgentId,
     );
     void this.salesforceSync.syncOnResolve(id);
+    void this.csatService.requestSurvey(id);
     return result;
   }
 
@@ -321,6 +331,7 @@ export class ConversationsService {
       result.assignedAgentId,
     );
     void this.salesforceSync.syncOnClose(id);
+    void this.csatService.requestSurvey(id);
     return result;
   }
 
@@ -472,6 +483,8 @@ export class ConversationsService {
       });
     }
 
+    void this.slaService.checkConversation(conversationId);
+
     return mapped;
   }
 
@@ -614,6 +627,7 @@ export class ConversationsService {
     departmentId: string | null;
     queueId: string | null;
     slaBreached: boolean;
+    botHandled?: boolean;
     createdAt: Date;
     updatedAt: Date;
     customer: { phone: string; name: string | null };
@@ -645,6 +659,7 @@ export class ConversationsService {
       lastMessageAt: lastMessage?.createdAt.toISOString(),
       messageCount: conversation._count.messages,
       slaBreached: conversation.slaBreached,
+      botHandled: conversation.botHandled ?? false,
       createdAt: conversation.createdAt.toISOString(),
       updatedAt: conversation.updatedAt.toISOString(),
     };
@@ -663,6 +678,7 @@ export class ConversationsService {
     departmentId: string | null;
     queueId: string | null;
     botHandled: boolean;
+    botTransferredAt: Date | null;
     firstResponseAt: Date | null;
     resolvedAt: Date | null;
     closedAt: Date | null;
@@ -743,6 +759,7 @@ export class ConversationsService {
         : undefined,
       lockedAt: conversation.lockedAt?.toISOString(),
       botHandled: conversation.botHandled,
+      botTransferredAt: conversation.botTransferredAt?.toISOString(),
       firstResponseAt: conversation.firstResponseAt?.toISOString(),
       resolvedAt: conversation.resolvedAt?.toISOString(),
       closedAt: conversation.closedAt?.toISOString(),
@@ -830,5 +847,31 @@ export class ConversationsService {
       readAt: message.readAt?.toISOString(),
       createdAt: message.createdAt.toISOString(),
     };
+  }
+
+  private buildInboxViewWhere(
+    inboxView?: InboxView,
+    currentUserId?: string,
+  ): Record<string, unknown> {
+    switch (inboxView) {
+      case InboxView.ACTIVE:
+        return { status: { notIn: ['RESOLVED', 'CLOSED'] } };
+      case InboxView.QUEUE:
+        return {
+          assignedAgentId: null,
+          botHandled: false,
+          status: { in: ['OPEN', 'WAITING', 'TRANSFERRED'] },
+        };
+      case InboxView.WAITING_ON_AGENT:
+        return currentUserId
+          ? { assignedAgentId: currentUserId, status: { in: ['OPEN', 'WAITING'] } }
+          : {};
+      case InboxView.WAITING_ON_USER:
+        return currentUserId
+          ? { assignedAgentId: currentUserId, status: 'PENDING' }
+          : {};
+      default:
+        return {};
+    }
   }
 }

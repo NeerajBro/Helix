@@ -34,8 +34,8 @@ export class ConversationsController {
   @Get()
   @RequirePermissions('conversations:read')
   @ApiOperation({ summary: 'List conversations' })
-  findAll(@Query() query: ConversationQueryDto) {
-    return this.conversationsService.findAll(query);
+  findAll(@Query() query: ConversationQueryDto, @CurrentUser() user: JwtPayload) {
+    return this.conversationsService.findAll(query, user.sub);
   }
 
   @Get('tags')

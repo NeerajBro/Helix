@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
 import {
   ConversationStatus,
   MessageContentType,
@@ -20,6 +20,7 @@ import { SimulatorCustomerQueryDto, SimulatorPresenceDto, SimulatorSendMessageDt
 import { buildPaginatedResponse, parsePagination } from '@helix/utils';
 import { BotService } from '../bot/bot.service';
 import { SalesforceSyncService } from '../integrations/salesforce-sync.service';
+import { CsatService } from '../csat/csat.service';
 
 const ACTIVE_STATUSES: ConversationStatus[] = ['OPEN', 'PENDING', 'WAITING', 'TRANSFERRED'];
 
@@ -32,6 +33,7 @@ export class SimulatorService {
     @Inject(WHATSAPP_ADAPTER) private readonly whatsapp: WhatsAppAdapter,
     private readonly botService: BotService,
     private readonly salesforceSync: SalesforceSyncService,
+    private readonly csatService: CsatService,
   ) {}
 
   async listCustomers(query: SimulatorCustomerQueryDto) {
@@ -62,7 +64,7 @@ export class SimulatorService {
 
   async getCustomerState(customerId: string): Promise<SimulatorConversationState> {
     const customer = await this.getCustomerOrThrow(customerId);
-    const conversation = await this.getOrCreateActiveConversation(customerId);
+    const conversation = await this.getConversationForSimulator(customerId);
     const summary = await this.mapCustomerSummary(customer, conversation.id);
 
     return {
@@ -74,7 +76,7 @@ export class SimulatorService {
   }
 
   async getMessages(customerId: string) {
-    const conversation = await this.getOrCreateActiveConversation(customerId);
+    const conversation = await this.getConversationForSimulator(customerId);
     const messages = await this.prisma.message.findMany({
       where: { conversationId: conversation.id, deletedAt: null },
       orderBy: { createdAt: 'asc' },
@@ -226,6 +228,15 @@ export class SimulatorService {
     return { updated: true };
   }
 
+  async submitCsat(customerId: string, rating: number, comment?: string) {
+    const conversation = await this.getConversationForSimulator(customerId);
+    const metadata = (conversation.metadata as Prisma.JsonObject | null) ?? {};
+    if (!metadata['csatPending']) {
+      throw new BadRequestException('No pending CSAT survey for this customer');
+    }
+    return this.csatService.submit({ conversationId: conversation.id, rating, comment });
+  }
+
   private async getCustomerOrThrow(customerId: string) {
     const customer = await this.prisma.customer.findFirst({
       where: { id: customerId, deletedAt: null },
@@ -234,6 +245,23 @@ export class SimulatorService {
       throw new NotFoundException(`Customer ${customerId} not found`);
     }
     return customer;
+  }
+
+  private async getConversationForSimulator(customerId: string) {
+    const pendingCsat = await this.prisma.conversation.findFirst({
+      where: {
+        customerId,
+        deletedAt: null,
+        status: { in: ['RESOLVED', 'CLOSED'] },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    if (pendingCsat && this.csatService.isCsatPending(pendingCsat.metadata)) {
+      return pendingCsat;
+    }
+
+    return this.getOrCreateActiveConversation(customerId);
   }
 
   private async getOrCreateActiveConversation(customerId: string) {
@@ -333,6 +361,9 @@ export class SimulatorService {
       whatsappExpiresAt: expiresAt?.toISOString(),
       windowOpen,
       unreadCount,
+      csatPending: conversation
+        ? ((conversation.metadata as Prisma.JsonObject | null)?.['csatPending'] === true)
+        : false,
     };
   }
 

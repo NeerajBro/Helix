@@ -1,0 +1,101 @@
+.contacts-page {
+  padding: 24px 32px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a2332;
+  }
+
+  p {
+    margin: 0;
+    color: #607d8b;
+    font-size: 14px;
+  }
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 10px;
+  padding: 6px 10px;
+
+  .material-icons {
+    color: #90a4ae;
+    font-size: 20px;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    min-width: 220px;
+  }
+}
+
+.table-card {
+  background: #fff;
+  border-radius: var(--helix-border-radius);
+  padding: 20px;
+  box-shadow: var(--helix-card-shadow);
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eef2f5;
+    }
+
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #90a4ae;
+    }
+  }
+}
+
+.vip-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff3e0;
+  color: #e65100;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+
+  &.primary {
+    background: #1565c0;
+    color: #fff;
+  }
+}
+
+.hint {
+  color: #90a4ae;
+  font-size: 13px;
+}

@@ -20,6 +20,7 @@ import {
 } from 'ng-apexcharts';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { SocketService } from '../../core/services/socket.service';
+import { AuthService } from '../../core/services/auth.service';
 import { AgentPerformance, DashboardAnalytics, DashboardStats } from '@helix/types';
 
 @Component({
@@ -31,7 +32,9 @@ import { AgentPerformance, DashboardAnalytics, DashboardStats } from '@helix/typ
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly socketService = inject(SocketService);
+  private readonly authService = inject(AuthService);
 
+  protected readonly user = this.authService.user;
   protected readonly stats = signal<DashboardStats | null>(null);
   protected readonly analytics = signal<DashboardAnalytics | null>(null);
   protected readonly loadingAnalytics = signal(true);
@@ -124,6 +127,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected setTrendDays(days: number): void {
     this.trendDays.set(days);
     this.loadAnalytics(days);
+  }
+
+  protected refreshData(): void {
+    this.dashboardService.getStats().subscribe({
+      next: (res) => this.stats.set(res.data),
+    });
+    this.loadAnalytics(this.trendDays());
   }
 
   protected agentStatusClass(agent: AgentPerformance): string {

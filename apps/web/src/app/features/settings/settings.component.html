@@ -1,0 +1,28 @@
+<div class="settings-page">
+  <aside class="settings-sidebar">
+    <header class="settings-sidebar-header">
+      <h2>Settings</h2>
+      <p>Platform &amp; channel configuration</p>
+    </header>
+
+    @for (group of navGroups; track group.title) {
+      <div class="settings-group">
+        <h3>{{ group.title }}</h3>
+        @for (item of group.items; track item.route) {
+          <a
+            class="settings-link"
+            [routerLink]="['/settings', item.route]"
+            routerLinkActive="active"
+          >
+            <span class="material-icons">{{ item.icon }}</span>
+            {{ item.label }}
+          </a>
+        }
+      </div>
+    }
+  </aside>
+
+  <main class="settings-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

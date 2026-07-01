@@ -74,5 +74,15 @@ export class SimulatorController {
   markRead(@Param('id', ParseUUIDPipe) id: string) {
     return this.simulatorService.markMessagesRead(id);
   }
+
+  @Post('customers/:id/csat')
+  @RequirePermissions('conversations:read')
+  @ApiOperation({ summary: 'Submit CSAT rating from simulator' })
+  submitCsat(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { rating: number; comment?: string },
+  ) {
+    return this.simulatorService.submitCsat(id, body.rating, body.comment);
+  }
 }
 

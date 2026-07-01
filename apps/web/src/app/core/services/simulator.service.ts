@@ -87,4 +87,11 @@ export class SimulatorService {
       {},
     );
   }
+
+  submitCsat(customerId: string, rating: number, comment?: string) {
+    return this.http.post<ApiWrapper<unknown>>(
+      `${API_URL}/simulator/customers/${customerId}/csat`,
+      { rating, comment },
+    );
+  }
 }

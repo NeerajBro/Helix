@@ -3,6 +3,10 @@
 }
 
 .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 24px;
 
   h1 {
@@ -16,6 +20,32 @@
     margin: 0;
     color: #607d8b;
     font-size: 14px;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+
+  .material-icons {
+    font-size: 18px;
+  }
+
+  &.secondary {
+    background: #fff;
+    color: #37474f;
+    box-shadow: var(--helix-card-shadow);
   }
 }
 

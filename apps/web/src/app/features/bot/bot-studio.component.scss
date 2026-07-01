@@ -1,0 +1,96 @@
+.bot-page {
+  padding: 24px 32px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a2332;
+  }
+
+  p {
+    margin: 0;
+    color: #607d8b;
+    font-size: 14px;
+  }
+}
+
+.intents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.intent-card {
+  background: #fff;
+  border-radius: var(--helix-border-radius);
+  padding: 20px;
+  box-shadow: var(--helix-card-shadow);
+}
+
+.intent-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  .material-icons {
+    color: #1565c0;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+.intent-routing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #546e7a;
+  margin-bottom: 12px;
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.keyword {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2f5;
+  font-size: 11px;
+  color: #546e7a;
+
+  &.more {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-decoration: none;
+  background: #eef2f5;
+  color: #37474f;
+}
+
+.hint {
+  color: #90a4ae;
+  font-size: 13px;
+}

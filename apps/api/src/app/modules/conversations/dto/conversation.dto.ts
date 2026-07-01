@@ -6,8 +6,16 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ConversationPriority, ConversationStatus, PaginationQuery } from '@helix/types';
+
+export enum InboxView {
+  ALL = 'all',
+  ACTIVE = 'active',
+  QUEUE = 'queue',
+  WAITING_ON_AGENT = 'waitingOnAgent',
+  WAITING_ON_USER = 'waitingOnCustomer',
+}
 
 export class ConversationQueryDto implements PaginationQuery {
   @ApiPropertyOptional({ default: 1 })
@@ -54,6 +62,20 @@ export class ConversationQueryDto implements PaginationQuery {
   @IsOptional()
   @IsUUID()
   customerId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by bot-handled conversations' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
+  botHandled?: boolean;
+
+  @ApiPropertyOptional({ enum: InboxView })
+  @IsOptional()
+  @IsEnum(InboxView)
+  inboxView?: InboxView;
 }
 
 export class CreateConversationDto {

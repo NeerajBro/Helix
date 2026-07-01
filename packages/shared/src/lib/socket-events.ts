@@ -28,8 +28,9 @@ export const SOCKET_EVENTS = {
   // Dashboard
   DASHBOARD_STATS_UPDATED: 'dashboard:stats_updated',
 
-  // Notifications
+  // Notifications & SLA
   NOTIFICATION_NEW: 'notification:new',
+  SLA_BREACH: 'sla:breach',
 
   // Simulator
   SIMULATOR_MESSAGE: 'simulator:message',

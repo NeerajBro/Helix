@@ -155,6 +155,54 @@ export class CustomersService {
     return { customerId: id, events };
   }
 
+  async getConversations(customerId: string) {
+    await this.findOne(customerId);
+
+    const conversations = await this.prisma.conversation.findMany({
+      where: { customerId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        department: { select: { name: true } },
+        assignedAgent: { select: { firstName: true, lastName: true } },
+        _count: { select: { messages: true } },
+      },
+    });
+
+    return conversations.map((c) => {
+      const endAt = c.closedAt ?? c.resolvedAt ?? new Date();
+      const durationMinutes = Math.max(
+        0,
+        Math.round((endAt.getTime() - c.createdAt.getTime()) / 60000),
+      );
+      const closedBy =
+        c.status === 'CLOSED' || c.status === 'RESOLVED'
+          ? c.botHandled && !c.assignedAgent
+            ? 'Closed by bot'
+            : c.assignedAgent
+              ? `Closed by ${c.assignedAgent.firstName} ${c.assignedAgent.lastName}`
+              : 'Closed'
+          : undefined;
+
+      return {
+        id: c.id,
+        status: c.status,
+        subject: c.subject ?? undefined,
+        departmentName: c.department?.name,
+        assignedAgentName: c.assignedAgent
+          ? `${c.assignedAgent.firstName} ${c.assignedAgent.lastName}`
+          : undefined,
+        closedBy,
+        createdAt: c.createdAt.toISOString(),
+        resolvedAt: c.resolvedAt?.toISOString(),
+        closedAt: c.closedAt?.toISOString(),
+        durationMinutes:
+          c.status === 'CLOSED' || c.status === 'RESOLVED' ? durationMinutes : undefined,
+        messageCount: c._count.messages,
+      };
+    });
+  }
+
   async create(dto: CreateCustomerDto) {
     const existing = await this.prisma.customer.findFirst({
       where: { phone: dto.phone, deletedAt: null },

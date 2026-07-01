@@ -186,6 +186,76 @@ Conversation detail (`GET /conversations/:id`) includes `salesforceCase` when sy
 | GET | `/dashboard/stats` | `reports:read` | Real-time KPI stats |
 | GET | `/dashboard/analytics` | `reports:read` | Trends, department distribution, agent performance (`?days=7`) |
 
+## Reports (Phase 11)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/reports` | `reports:read` | Full reports bundle (`?from=&to=`) |
+| GET | `/reports/summary` | `reports:read` | Summary KPIs for date range |
+| GET | `/reports/departments` | `reports:read` | Department performance |
+| GET | `/reports/agents` | `reports:read` | Agent performance |
+| GET | `/reports/conversations` | `reports:read` | Paginated conversation report |
+| GET | `/reports/bot` | `reports:read` | Bot handoff and intent breakdown |
+| GET | `/reports/sla` | `reports:read` | SLA compliance and breaches |
+| GET | `/reports/csat` | `reports:read` | CSAT satisfaction report |
+| GET | `/reports/export` | `reports:read` | CSV export (`?type=agents&format=csv&from=&to=`) |
+
+## CSAT (Phase 11)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| POST | `/csat` | `conversations:read` | Submit CSAT rating |
+| GET | `/csat/conversations/:id` | `conversations:read` | Get survey for conversation |
+| POST | `/simulator/customers/:id/csat` | `conversations:read` | Submit CSAT from simulator |
+
+## Administration (Phase 12)
+
+### Settings & White-label
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/settings/public` | Public | Public settings key-value map |
+| GET | `/settings/white-label` | Public | Branding settings |
+| GET | `/settings` | `settings:read` | List all settings |
+| PATCH | `/settings/white-label` | `settings:update` | Update branding |
+| PATCH | `/settings/:key` | `settings:update` | Update setting by key |
+
+### Templates
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/templates` | `templates:read` | List templates |
+| GET | `/templates/:id` | `templates:read` | Get template |
+| POST | `/templates` | `templates:create` | Create template |
+| PATCH | `/templates/:id` | `templates:update` | Update template |
+| DELETE | `/templates/:id` | `templates:delete` | Soft delete template |
+
+### WhatsApp Numbers
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/whatsapp-numbers` | `settings:read` | List numbers |
+| POST | `/whatsapp-numbers` | `settings:update` | Register number |
+| PATCH | `/whatsapp-numbers/:id` | `settings:update` | Update number |
+| DELETE | `/whatsapp-numbers/:id` | `settings:update` | Soft delete number |
+
+### Campaigns
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/campaigns` | `campaigns:read` | List campaigns |
+| GET | `/campaigns/:id` | `campaigns:read` | Get campaign |
+| GET | `/campaigns/:id/recipients` | `campaigns:read` | List recipients |
+| POST | `/campaigns` | `campaigns:create` | Create campaign with recipients |
+| POST | `/campaigns/:id/start` | `campaigns:update` | Start campaign (BullMQ) |
+| POST | `/campaigns/:id/cancel` | `campaigns:update` | Cancel campaign |
+
+### Audit
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/audit` | `audit:read` | Paginated audit logs |
+
 ## WebSocket Events (Phase 5)
 
 Connect to the app origin (proxied to the API) with JWT token in `auth.token`.
@@ -199,6 +269,7 @@ Connect to the app origin (proxied to the API) with JWT token in `auth.token`.
 | `typing:stop` | Bidirectional | `{ conversationId, userId }` |
 | `agent:status_changed` | Server → Client | `{ userId, status, since }` |
 | `dashboard:stats_updated` | Server → Client | Dashboard KPI object |
+| `sla:breach` | Server → Client | SLA breach alert |
 | `subscribe:simulator` | Client → Server | `{ customerId }` |
 | `unsubscribe:simulator` | Client → Server | `{ customerId }` |
 | `simulator:message` | Server → Client | Inbound/outbound message sync |

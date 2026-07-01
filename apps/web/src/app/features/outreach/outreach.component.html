@@ -1,0 +1,75 @@
+<div class="outreach-page">
+  <header class="page-header">
+    <div>
+      <h1>Outreach</h1>
+      <p>WhatsApp campaign delivery, read rates, and error analytics</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="hint">Loading campaigns...</p>
+  } @else {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Campaigns</span>
+        <span class="stat-value">{{ stats().totalCampaigns }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Recipients</span>
+        <span class="stat-value">{{ stats().totalRecipients }}</span>
+      </div>
+      <div class="stat-card success">
+        <span class="stat-label">Delivered</span>
+        <span class="stat-value">{{ stats().deliveredPct }}%</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Read (est.)</span>
+        <span class="stat-value">{{ stats().readPct }}%</span>
+      </div>
+      <div class="stat-card danger">
+        <span class="stat-label">Failed</span>
+        <span class="stat-value">{{ stats().failedPct }}%</span>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Campaigns</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Template</th>
+            <th>Status</th>
+            <th>Recipients</th>
+            <th>Sent / Failed</th>
+            <th>Scheduled</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of campaigns(); track c.id) {
+            <tr>
+              <td><strong>{{ c.name }}</strong></td>
+              <td>{{ c.templateName ?? '—' }}</td>
+              <td>
+                <span class="status-badge" [style.background]="statusColor(c.status)">{{ c.status }}</span>
+              </td>
+              <td>{{ c.totalRecipients }}</td>
+              <td>{{ c.sentCount }} / {{ c.failedCount }}</td>
+              <td>{{ c.scheduledAt ? (c.scheduledAt | date: 'short') : '—' }}</td>
+              <td>
+                @if (c.status === 'DRAFT' || c.status === 'SCHEDULED') {
+                  <button type="button" class="btn secondary" [disabled]="startingCampaign() === c.id" (click)="startCampaign(c.id)">
+                    {{ startingCampaign() === c.id ? 'Starting...' : 'Start' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="hint">No outreach campaigns yet</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

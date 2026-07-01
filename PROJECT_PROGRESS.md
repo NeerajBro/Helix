@@ -16,20 +16,22 @@ Last updated: 2026-06-29
 | 8 | Agent Inbox UI | ✅ Complete | 100% |
 | 9 | Dashboard & Analytics | ✅ Complete | 100% |
 | 10 | Salesforce & Bookings | ✅ Complete | 100% |
-| 11 | Reports & CSAT | ⬜ Not Started | 0% |
-| 12 | Administration & Campaigns | ⬜ Not Started | 0% |
+| 11 | Reports & CSAT | ✅ Complete | 100% |
+| 12 | Administration & Campaigns | ✅ Complete | 100% |
 | 13 | Testing & Production Readiness | ⬜ Not Started | 0% |
 
-**Overall: ~77% complete (Phases 1–10 of 13)**
+**Overall: ~92% complete (Phases 1–12 of 13)**
 
-## Phase 10 Deliverables
+## Phase 12 Deliverables
 
-- [x] Salesforce adapter interface + mock adapter (REST stub for production)
-- [x] `SalesforceSyncService` — case create on conversation start, update on handoff/assign/transfer/resolve/close
-- [x] Booking adapter (Prisma-backed) + `BookingsModule` API
-- [x] Seed data: ~70 bookings + sample Salesforce cases
-- [x] Inbox profile: bookings list + Salesforce case card with sync status
+- [x] Expanded Admin UI — users, roles, departments, queues, agents, templates, campaigns, WhatsApp, audit, white-label
+- [x] Templates CRUD API with audit logging
+- [x] WhatsApp numbers management API
+- [x] Campaign engine with BullMQ + mock WhatsApp template send
+- [x] Global AuditService + audit log viewer
+- [x] Settings / white-label API (public + admin)
+- [x] Seed: templates, sample campaign, audit logs, brand settings
 
-## Next Up: Phase 11
+## Next Up: Phase 13
 
-Reports & CSAT — operational reports, SLA tracking, CSAT survey flow, exports.
+Testing, polish, and production readiness — E2E tests, error boundaries, Docker verification.

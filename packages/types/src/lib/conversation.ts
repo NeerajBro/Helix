@@ -73,6 +73,7 @@ export interface ConversationDetail extends ConversationSummary {
   lockedBy?: { id: string; name: string };
   lockedAt?: string;
   botHandled: boolean;
+  botTransferredAt?: string;
   firstResponseAt?: string;
   resolvedAt?: string;
   closedAt?: string;

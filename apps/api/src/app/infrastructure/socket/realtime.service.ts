@@ -62,6 +62,16 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
     this.gateway.server.to(SOCKET_ROOMS.simulator(customerId)).emit(event, payload);
   }
 
+  emitSlaBreach(payload: unknown, departmentId?: string | null, agentId?: string | null): void {
+    this.gateway.server.emit(SOCKET_EVENTS.SLA_BREACH, payload);
+    if (departmentId) {
+      this.emitToDepartment(departmentId, SOCKET_EVENTS.SLA_BREACH, payload);
+    }
+    if (agentId) {
+      this.emitToAgent(agentId, SOCKET_EVENTS.SLA_BREACH, payload);
+    }
+  }
+
   async emitConversationEvent(
     conversationId: string,
     event: string,

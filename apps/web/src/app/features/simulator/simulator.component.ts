@@ -70,6 +70,12 @@ export class SimulatorComponent implements OnInit, OnDestroy {
         if (payload.direction === 'outbound') {
           void this.simulatorService.markRead(payload.customerId).subscribe();
         }
+        if ('csatPending' in payload && payload.csatPending) {
+          this.customerState.update((s) => (s ? { ...s, csatPending: true } : s));
+        }
+        if ('csatPending' in payload && payload.csatPending === false) {
+          this.customerState.update((s) => (s ? { ...s, csatPending: false } : s));
+        }
         this.scrollToBottom();
       }),
       this.socketService.onSimulatorStatus().subscribe((status) => {
@@ -151,6 +157,27 @@ export class SimulatorComponent implements OnInit, OnDestroy {
     const next = !customer.isOnline;
     this.simulatorService.setPresence(customer.id, next).subscribe({
       next: () => this.customerState.update((s) => (s ? { ...s, isOnline: next } : s)),
+    });
+  }
+
+  protected submitCsat(rating: number): void {
+    const customerId = this.selectedCustomerId();
+    if (!customerId || this.sending()) return;
+    this.sending.set(true);
+    this.simulatorService.submitCsat(customerId, rating).subscribe({
+      next: () => {
+        this.customerState.update((s) => (s ? { ...s, csatPending: false } : s));
+        this.sending.set(false);
+        if (customerId) {
+          this.simulatorService.getMessages(customerId).subscribe({
+            next: (res) => {
+              this.messages.set(res.data);
+              this.scrollToBottom();
+            },
+          });
+        }
+      },
+      error: () => this.sending.set(false),
     });
   }
 
